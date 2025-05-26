@@ -8,7 +8,7 @@ export default function Logo() {
     <Link href="/" className="flex-shrink-0">
       <div className="relative h-10 w-32">
         <Image 
-          src="/logo.svg" 
+          src="/images/LOGO.png" 
           alt="MISPRI" 
           width={120} 
           height={40} 

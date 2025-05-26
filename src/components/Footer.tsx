@@ -6,7 +6,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 export default function Footer() {
   return (
     <footer className="bg-white pt-8 pb-4">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="mx-auto px-20">
         {/* Main Footer Links */}
         <div className="bg-gray-100 py-8 px-8 rounded-lg mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -131,11 +131,12 @@ export default function Footer() {
         <div className="pt-6 flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <Link href="/">
-              <Image src="/images/logo.svg" alt="Mispri" width={120} height={40} />
+              <Image src="/images/LOGO.png" alt="Mispri" width={120} height={40} />
             </Link>
           </div>
           <div className="text-sm text-gray-600">
-            <p>© 2023 Mispri. All rights reserved by Wipster Technologies Private Limited</p>
+             <p className="text-xs text-gray-500 mt-2">© 2025 Mispri. All rights reserved by <a href="https://www.wipstertechnologies.com/" target="_blank" className="hover:text-[#dc2626] font-bold transition duration-500">Wipster Technologies Private Limited</a>
+              </p>
           </div>
         </div>
 
