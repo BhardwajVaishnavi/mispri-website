@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/db';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -6,67 +5,65 @@ import ProductCard from '@/components/ProductCard';
 import ProductActions from '@/components/ProductActions';
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const product = await prisma.product.findUnique({
-    where: { id: params.id },
-  });
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products/${params.id}`, {
+      cache: 'no-store'
+    });
 
-  if (!product) {
+    if (!response.ok) {
+      return {
+        title: 'Product Not Found',
+      };
+    }
+
+    const product = await response.json();
+    return {
+      title: `${product.name} - Bakery Shop`,
+      description: product.metaDescription || product.description || `Buy ${product.name} from Bakery Shop.`,
+    };
+  } catch (error) {
     return {
       title: 'Product Not Found',
     };
   }
-
-  return {
-    title: `${product.name} - Bakery Shop`,
-    description: product.metaDescription || product.description || `Buy ${product.name} from Bakery Shop.`,
-  };
 }
 
 async function getProduct(id: string) {
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      productImages: true,
-      relatedProducts: {
-        include: {
-          relatedProduct: {
-            include: {
-              productImages: {
-                where: {
-                  isMain: true,
-                },
-                take: 1,
-              },
-            },
-          },
-        },
-        take: 4,
-      },
-    },
-  });
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      cache: 'no-store'
+    });
 
-  return product;
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return null;
+  }
 }
 
 async function getRelatedProducts(category: string, excludeId: string) {
-  const products = await prisma.product.findMany({
-    where: {
-      category,
-      id: { not: excludeId },
-      isActive: true,
-    },
-    include: {
-      productImages: {
-        where: {
-          isMain: true,
-        },
-        take: 1,
-      },
-    },
-    take: 4,
-  });
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products?categoryId=${encodeURIComponent(category)}`, {
+      cache: 'no-store'
+    });
 
-  return products;
+    if (!response.ok) {
+      return [];
+    }
+
+    const products = await response.json();
+    return Array.isArray(products) ? products.filter((p: any) => p.id !== excludeId).slice(0, 4) : [];
+  } catch (error) {
+    console.error('Error fetching related products:', error);
+    return [];
+  }
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
@@ -76,22 +73,18 @@ export default async function ProductPage({ params }: { params: { id: string } }
     notFound();
   }
 
-  // Get related products either from relatedProducts or by category
-  let relatedProducts = product.relatedProducts.map(relation => relation.relatedProduct);
-
-  if (relatedProducts.length === 0) {
-    relatedProducts = await getRelatedProducts(product.category, product.id);
-  }
+  // Get related products by category
+  const relatedProducts = await getRelatedProducts(product.category, product.id);
 
   // Get main image
-  const mainImage = product.productImages.find(img => img.isMain) ||
-                    product.productImages[0] ||
+  const mainImage = product.productImages?.find((img: any) => img.isMain) ||
+                    product.productImages?.[0] ||
                     { url: product.imageUrl || `https://picsum.photos/seed/${product.id}/800/600` };
 
   // Get additional images
   const additionalImages = product.productImages
-    .filter(img => !img.isMain)
-    .slice(0, 3);
+    ?.filter((img: any) => !img.isMain)
+    ?.slice(0, 3) || [];
 
   return (
     <div className="container mx-auto px-4 py-8">

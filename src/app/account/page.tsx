@@ -15,52 +15,8 @@ const user = {
   phone: '+91 9876543210',
 };
 
-// Mock orders data
-const orders = [
-  {
-    id: 'ORD123456',
-    date: '2023-05-15',
-    status: 'Delivered',
-    total: 1698,
-    items: [
-      { name: 'Red Rose Bouquet', quantity: 1 },
-      { name: 'Chocolate Truffle Cake', quantity: 1 },
-    ],
-  },
-  {
-    id: 'ORD789012',
-    date: '2023-04-22',
-    status: 'Delivered',
-    total: 2499,
-    items: [
-      { name: 'Birthday Gift Hamper', quantity: 1 },
-    ],
-  },
-];
-
-// Mock addresses
-const addresses = [
-  {
-    id: '1',
-    type: 'Home',
-    isDefault: true,
-    street: '123 Main Street',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    postalCode: '400001',
-    country: 'India',
-  },
-  {
-    id: '2',
-    type: 'Office',
-    isDefault: false,
-    street: '456 Business Park',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    postalCode: '400051',
-    country: 'India',
-  },
-];
+// Note: In a real application, these would be fetched from the API based on the authenticated user
+// For now, we'll show empty states with proper messaging
 
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -237,9 +193,28 @@ export default function AccountPage() {
             {activeTab === 'orders' && (
               <div>
                 <h2 className="text-xl font-semibold mb-6">My Orders</h2>
-                {orders.length === 0 ? (
-                  <p className="text-gray-600">You haven't placed any orders yet.</p>
-                ) : (
+                <div className="bg-white border rounded-lg p-8 text-center">
+                  <div className="mb-4">
+                    <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    You haven't placed any orders yet. Start shopping to see your order history here.
+                  </p>
+                  <Link
+                    href="/products"
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                  >
+                    Start Shopping
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Future: When orders exist, show them here */}
+            {false && (
                   <div className="space-y-6">
                     {orders.map((order) => (
                       <div key={order.id} className="border rounded-lg p-4">
@@ -285,17 +260,25 @@ export default function AccountPage() {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
 
             {activeTab === 'wishlist' && (
               <div>
-                <h2 className="text-xl font-semibold mb-6">My Wishlist</h2>
-                <p className="text-gray-600">Your wishlist is empty.</p>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">My Wishlist</h2>
+                  <Link
+                    href="/wishlist"
+                    className="text-primary-600 hover:text-primary-800 font-medium text-sm"
+                  >
+                    View Full Wishlist
+                  </Link>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Save items you love to your wishlist and shop them later.
+                </p>
                 <div className="mt-4">
                   <Link
                     href="/products"
-                    className="text-primary-600 hover:text-primary-800 font-medium"
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                   >
                     Continue Shopping
                   </Link>
@@ -311,35 +294,20 @@ export default function AccountPage() {
                     Add New Address
                   </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {addresses.map((address) => (
-                    <div key={address.id} className="border rounded-lg p-4 relative">
-                      {address.isDefault && (
-                        <span className="absolute top-2 right-2 bg-primary-100 text-primary-800 text-xs font-medium px-2 py-1 rounded">
-                          Default
-                        </span>
-                      )}
-                      <p className="font-medium mb-1">{address.type}</p>
-                      <p className="text-sm text-gray-600">{address.street}</p>
-                      <p className="text-sm text-gray-600">
-                        {address.city}, {address.state} {address.postalCode}
-                      </p>
-                      <p className="text-sm text-gray-600 mb-4">{address.country}</p>
-                      <div className="flex space-x-3">
-                        <button className="text-primary-600 hover:text-primary-800 text-sm font-medium">
-                          Edit
-                        </button>
-                        <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-                          Delete
-                        </button>
-                        {!address.isDefault && (
-                          <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                            Set as Default
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="bg-white border rounded-lg p-8 text-center">
+                  <div className="mb-4">
+                    <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses saved</h3>
+                  <p className="text-gray-600 mb-6">
+                    Add your delivery addresses to make checkout faster and easier.
+                  </p>
+                  <button className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                    Add Your First Address
+                  </button>
                 </div>
               </div>
             )}

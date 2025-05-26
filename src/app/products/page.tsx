@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import Link from 'next/link';
 
@@ -8,33 +7,37 @@ export const metadata = {
 };
 
 async function getCategories() {
-  const categories = await prisma.product.findMany({
-    select: {
-      category: true,
-    },
-    distinct: ['category'],
-  });
-  
-  return categories.map(c => c.category);
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/categories`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch categories');
+      return [];
+    }
+    const categories = await response.json();
+    return Array.isArray(categories) ? categories.map((c: any) => c.name || c.category || c) : [];
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
 }
 
 async function getProducts() {
-  return prisma.product.findMany({
-    where: {
-      isActive: true,
-    },
-    include: {
-      productImages: {
-        where: {
-          isMain: true,
-        },
-        take: 1,
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch products');
+      return [];
+    }
+    const products = await response.json();
+    return Array.isArray(products) ? products : [];
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return [];
+  }
 }
 
 export default async function ProductsPage() {
@@ -46,7 +49,7 @@ export default async function ProductsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">All Products</h1>
-      
+
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <div className="md:w-1/4 lg:w-1/5">
@@ -71,7 +74,7 @@ export default async function ProductsPage() {
             </ul>
           </div>
         </div>
-        
+
         {/* Products Grid */}
         <div className="md:w-3/4 lg:w-4/5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -7,6 +7,8 @@ import { FaGift, FaShoppingCart, FaUser } from 'react-icons/fa';
 import Logo from './Logo';
 import { Category } from '@/lib/types';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
 
 // Default categories until we fetch from backend - limited to 10
@@ -34,6 +36,8 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
+  const { user, isAuthenticated, logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>(
     defaultCategories.map(cat => ({
       id: cat.id,
@@ -168,13 +172,20 @@ export default function Header() {
                 <span>Cart</span>
               </Link>
 
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="flex flex-col items-center text-xs text-gray-700 hover:text-primary-600"
-              >
-                <FaUser className="h-6 w-6" />
-                <span>Sign In</span>
-              </button>
+              {isAuthenticated ? (
+                <Link href="/account" className="flex flex-col items-center text-xs text-gray-700 hover:text-primary-600">
+                  <FaUser className="h-6 w-6" />
+                  <span>{user?.name?.split(' ')[0] || 'Account'}</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="flex flex-col items-center text-xs text-gray-700 hover:text-primary-600"
+                >
+                  <FaUser className="h-6 w-6" />
+                  <span>Sign In</span>
+                </button>
+              )}
 
               {/* More Menu (Three Dots) */}
               <div className="hidden md:block relative" ref={moreMenuRef}>
@@ -188,9 +199,16 @@ export default function Header() {
 
                 {isMoreMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <Link href="/wishlist" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <FiHeart className="mr-2" />
-                      Wishlist
+                    <Link href="/wishlist" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <div className="flex items-center">
+                        <FiHeart className="mr-2" />
+                        Wishlist
+                      </div>
+                      {wishlistCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {wishlistCount}
+                        </span>
+                      )}
                     </Link>
                     <Link href="/contact" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <FiPhone className="mr-2" />
@@ -200,6 +218,25 @@ export default function Header() {
                       <FiHelpCircle className="mr-2" />
                       Help & FAQs
                     </Link>
+                    {isAuthenticated && (
+                      <>
+                        <hr className="my-1" />
+                        <Link href="/account" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <FaUser className="mr-2" />
+                          My Account
+                        </Link>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setIsMoreMenuOpen(false);
+                          }}
+                          className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FiEdit2 className="mr-2" />
+                          Sign Out
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -286,24 +323,37 @@ export default function Header() {
               >
                 Gift Finder
               </Link>
-              <Link
-                href="/account"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsMenuOpen(false);
-                  setIsAuthModalOpen(true);
-                }}
-              >
-                Sign In
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href="/account"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Account
+                </Link>
+              ) : (
+                <button
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                >
+                  Sign In
+                </button>
+              )}
 
               <Link
                 href="/wishlist"
-                className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
+                className="flex items-center justify-between px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Wishlist
+                <span>Wishlist</span>
+                {wishlistCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
               </Link>
 
               <Link
@@ -321,6 +371,18 @@ export default function Header() {
               >
                 Help & FAQs
               </Link>
+
+              {isAuthenticated && (
+                <button
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-primary-600"
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
           </nav>
         </div>

@@ -5,8 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiCalendar, FiUser, FiTag, FiSearch } from 'react-icons/fi';
 
-// Mock blog posts data
-const blogPosts = [
+// Note: In a real application, blog posts would be fetched from a CMS or API
+// For now, we'll show a coming soon message
+const blogPosts: any[] = [
   {
     id: 1,
     title: 'The Art of Cake Decoration: Tips and Techniques',
@@ -81,6 +82,9 @@ const blogPosts = [
   }
 ];
 
+// For now, show empty blog to avoid demo data
+const actualBlogPosts: any[] = [];
+
 // Categories for filtering
 const categories = [
   'All Categories',
@@ -96,13 +100,13 @@ export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('All Categories');
 
   // Filter blog posts based on search query and category
-  const filteredPosts = blogPosts.filter(post => {
+  const filteredPosts = actualBlogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesCategory = activeCategory === 'All Categories' || post.category === activeCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -110,11 +114,11 @@ export default function BlogPage() {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">Our Blog</h1>
-        
+
         <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
           Discover tips, ideas, and inspiration for cakes, flowers, gifts, and celebrations. Stay updated with our latest articles and guides.
         </p>
-        
+
         {/* Search and Filter */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -130,7 +134,7 @@ export default function BlogPage() {
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
             </div>
-            
+
             <div>
               <select
                 className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -146,7 +150,7 @@ export default function BlogPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Featured Post */}
         {filteredPosts.length > 0 && (
           <div className="mb-12">
@@ -172,10 +176,10 @@ export default function BlogPage() {
                     <FiUser className="mr-2" />
                     <span>{filteredPosts[0].author}</span>
                   </div>
-                  
+
                   <h2 className="text-2xl font-semibold mb-4">{filteredPosts[0].title}</h2>
                   <p className="text-gray-600 mb-6">{filteredPosts[0].excerpt}</p>
-                  
+
                   <div className="flex flex-wrap gap-2 mb-6">
                     {filteredPosts[0].tags.map((tag) => (
                       <span key={tag} className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full">
@@ -183,7 +187,7 @@ export default function BlogPage() {
                       </span>
                     ))}
                   </div>
-                  
+
                   <Link
                     href={`/blog/${filteredPosts[0].slug}`}
                     className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-md transition-colors"
@@ -195,7 +199,7 @@ export default function BlogPage() {
             </div>
           </div>
         )}
-        
+
         {/* Blog Posts Grid */}
         {filteredPosts.length > 1 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -221,10 +225,10 @@ export default function BlogPage() {
                       day: 'numeric'
                     })}</span>
                   </div>
-                  
+
                   <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-                  
+
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-gray-500 flex items-center">
                       <FiUser className="mr-1" />
@@ -242,20 +246,43 @@ export default function BlogPage() {
             ))}
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-4">No articles found matching your search criteria.</p>
-            <button
-              className="text-primary-600 hover:text-primary-700 font-medium"
-              onClick={() => {
-                setSearchQuery('');
-                setActiveCategory('All Categories');
-              }}
-            >
-              Clear Filters
-            </button>
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <div className="mb-6">
+              <svg className="mx-auto h-20 w-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Blog Coming Soon!</h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              We're working on creating amazing content about flowers, cakes, and gift ideas.
+              Stay tuned for helpful tips, tutorials, and inspiration!
+            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">In the meantime, explore our products:</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/products?category=Flowers"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  Shop Flowers
+                </Link>
+                <Link
+                  href="/products?category=Cakes"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  Shop Cakes
+                </Link>
+                <Link
+                  href="/products?category=Gifts"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  Shop Gifts
+                </Link>
+              </div>
+            </div>
           </div>
         ) : null}
-        
+
         {/* Newsletter Signup */}
         <div className="mt-16 bg-primary-50 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-semibold mb-4">Subscribe to Our Newsletter</h2>

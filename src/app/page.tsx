@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { prisma } from '@/lib/db';
 import { FiArrowRight, FiClock, FiGift, FiHeart, FiStar } from 'react-icons/fi';
 import SimpleCarousel from '@/components/SimpleCarousel';
 import ProductCard from '@/components/ProductCard';
@@ -8,51 +7,56 @@ import CategoryCard from '@/components/CategoryCard';
 import CategoryCarousel from '@/components/CategoryCarousel';
 
 async function getCategories() {
-  const categories = await prisma.product.findMany({
-    select: {
-      category: true,
-    },
-    distinct: ['category'],
-  });
-
-  return categories.map(c => c.category);
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/categories`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch categories');
+      return [];
+    }
+    const categories = await response.json();
+    return Array.isArray(categories) ? categories.map((c: any) => c.name || c.category || c) : [];
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
 }
 
 async function getFeaturedProducts() {
-  return prisma.product.findMany({
-    where: {
-      isActive: true,
-    },
-    include: {
-      productImages: {
-        where: {
-          isMain: true,
-        },
-        take: 1,
-      },
-    },
-    take: 8,
-  });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch products');
+      return [];
+    }
+    const products = await response.json();
+    return Array.isArray(products) ? products.slice(0, 8) : [];
+  } catch (error) {
+    console.error('Error fetching featured products:', error);
+    return [];
+  }
 }
 
 async function getBestSellingProducts() {
-  return prisma.product.findMany({
-    where: {
-      isActive: true,
-    },
-    include: {
-      productImages: {
-        where: {
-          isMain: true,
-        },
-        take: 1,
-      },
-    },
-    take: 4,
-    orderBy: {
-      price: 'desc', // In a real app, this would be based on sales data
-    },
-  });
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.error('Failed to fetch products');
+      return [];
+    }
+    const products = await response.json();
+    // Sort by price descending to simulate best selling
+    const sortedProducts = Array.isArray(products) ? products.sort((a: any, b: any) => b.price - a.price) : [];
+    return sortedProducts.slice(0, 4);
+  } catch (error) {
+    console.error('Error fetching best selling products:', error);
+    return [];
+  }
 }
 
 export default async function Home() {
@@ -240,71 +244,29 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <Link href="/product/1">
-                <div className="aspect-square">
-                  <img
-                    src="/images/flowers/mixed_bouquet.jpg"
-                    alt="Mixed Roses Bouquet"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2">
-                  <h3 className="font-medium text-gray-800 text-sm">Mixed Roses Bouquet</h3>
-                  <p className="text-sm font-bold text-gray-800 mt-1">₹599</p>
-                </div>
-              </Link>
-            </div>
+            {bestSellingProducts.slice(0, 4).map((product, index) => {
+              const imageUrl = product.productImages && product.productImages.length > 0
+                ? product.productImages.find((img: any) => img.isMain)?.url || product.productImages[0].url
+                : product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`;
 
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <Link href="/product/2">
-                <div className="aspect-square">
-                  <img
-                    src="/images/cakes/chocolate_cake.jpg"
-                    alt="Chocolate Truffle Cake"
-                    className="w-full h-full object-cover"
-                  />
+              return (
+                <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+                  <Link href={`/product/${product.id}`}>
+                    <div className="aspect-square">
+                      <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2">
+                      <h3 className="font-medium text-gray-800 text-sm">{product.name}</h3>
+                      <p className="text-sm font-bold text-gray-800 mt-1">₹{product.price.toFixed(2)}</p>
+                    </div>
+                  </Link>
                 </div>
-                <div className="p-2">
-                  <h3 className="font-medium text-gray-800 text-sm">Chocolate Truffle Cake</h3>
-                  <p className="text-sm font-bold text-gray-800 mt-1">₹799</p>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <Link href="/product/3">
-                <div className="aspect-square">
-                  <img
-                    src="/images/combos/cake_flower_combo.jpg"
-                    alt="Flower & Cake Combo"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2">
-                  <h3 className="font-medium text-gray-800 text-sm">Flower & Cake Combo</h3>
-                  <p className="text-sm font-bold text-gray-800 mt-1">₹1299</p>
-                </div>
-              </Link>
-            </div>
-
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-              <Link href="/product/4">
-                <div className="aspect-square">
-                  <img
-                    src="/images/flowers/rose_bouquet.jpg"
-                    alt="Rose Bouquet"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2">
-                  <h3 className="font-medium text-gray-800 text-sm">Rose Bouquet</h3>
-                  <p className="text-sm font-bold text-gray-800 mt-1">₹899</p>
-                </div>
-              </Link>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>

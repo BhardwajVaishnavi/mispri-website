@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkPincode } from '@/lib/api';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 // Bhubaneswar pincodes as fallback
 const bhubaneswarPincodes = [
   '751001', '751002', '751003', '751004', '751005',

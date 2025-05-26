@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getCategories } from '@/lib/api';
 
 // Default categories as fallback
 const defaultCategories = [
@@ -20,15 +19,25 @@ const defaultCategories = [
 
 export async function GET() {
   try {
-    // Try to get categories from the database
-    const categories = await getCategories();
+    // Try to get categories from the admin panel API
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
 
-    // If we got categories from the database, return them
-    if (categories && categories.length > 0) {
-      return NextResponse.json(categories);
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    });
+
+    if (response.ok) {
+      const categories = await response.json();
+      if (Array.isArray(categories) && categories.length > 0) {
+        return NextResponse.json(categories);
+      }
     }
 
-    // Otherwise, return the default categories
+    // Return default categories if admin API fails or returns empty
     return NextResponse.json(defaultCategories);
   } catch (error) {
     console.error('Error in categories API route:', error);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { FiHeart, FiShoppingCart, FiStar, FiCheck } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 type ProductCardProps = {
   product: {
@@ -25,7 +26,9 @@ type ProductCardProps = {
 export default function ProductCard({ product, isBestSeller = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [addedToCart, setAddedToCart] = useState(false);
+  const [addingToWishlist, setAddingToWishlist] = useState(false);
 
   const imageUrl =
     product.productImages && product.productImages.length > 0
@@ -46,6 +49,32 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
     // Show added to cart feedback
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setAddingToWishlist(true);
+    try {
+      if (isInWishlist(product.id)) {
+        await removeFromWishlist(product.id);
+      } else {
+        await addToWishlist({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: imageUrl,
+          category: product.category,
+          inStock: true, // Assume in stock for now
+          description: product.description || undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+    } finally {
+      setAddingToWishlist(false);
+    }
   };
 
   return (
@@ -79,10 +108,20 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
             }`}
           >
             <button
-              className="bg-white text-primary-600 p-2 rounded-full hover:bg-primary-50 transition-colors"
-              aria-label="Add to wishlist"
+              className={`p-2 rounded-full transition-colors ${
+                isInWishlist(product.id)
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-white text-primary-600 hover:bg-primary-50'
+              } ${addingToWishlist ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              onClick={handleWishlistToggle}
+              disabled={addingToWishlist}
             >
-              <FiHeart size={18} />
+              {addingToWishlist ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+              ) : (
+                <FiHeart size={18} className={isInWishlist(product.id) ? 'fill-current' : ''} />
+              )}
             </button>
             <button
               className="bg-primary-600 text-white p-3 rounded-full hover:bg-primary-700 transition-colors"

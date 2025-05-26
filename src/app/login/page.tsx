@@ -1,25 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
-
-// Metadata is moved to layout.tsx since this is a client component
-// title: 'Login - Bakery Shop',
-// description: 'Login to your Bakery Shop account'
+import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiPhone } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+  });
+
+  const { login, register, error, clearError, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    clearError();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would handle authentication
-    console.log('Form submitted');
+    setIsLoading(true);
+    clearError();
+
+    try {
+      if (isLogin) {
+        const success = await login(formData.email, formData.password);
+        if (success) {
+          router.push('/');
+        }
+      } else {
+        // Validation for registration
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
+        if (formData.password.length < 6) {
+          throw new Error('Password must be at least 6 characters');
+        }
+
+        const success = await register(formData.name, formData.email, formData.password, formData.phone);
+        if (success) {
+          router.push('/');
+        }
+      }
+    } catch (err: any) {
+      console.error('Auth error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -29,22 +77,53 @@ export default function LoginPage() {
           {isLogin ? 'Login to Your Account' : 'Create an Account'}
         </h1>
 
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
+                Full Name *
               </label>
               <div className="relative">
                 <input
                   type="text"
                   id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   className="w-full border rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="John Doe"
                   required={!isLogin}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMail className="text-gray-400" />
+                  <FiUser className="text-gray-400" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isLogin && (
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="+91 98765 43210"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiPhone className="text-gray-400" />
                 </div>
               </div>
             </div>
@@ -52,12 +131,15 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
+              Email Address *
             </label>
             <div className="relative">
               <input
                 type="email"
                 id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 className="w-full border rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="your@email.com"
                 required
@@ -70,15 +152,19 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Password *
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
                 className="w-full border rounded-md px-3 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="••••••••"
                 required
+                minLength={6}
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className="text-gray-400" />
@@ -100,15 +186,19 @@ export default function LoginPage() {
           {!isLogin && (
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
+                Confirm Password *
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
                   className="w-full border rounded-md px-3 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="••••••••"
                   required={!isLogin}
+                  minLength={6}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiLock className="text-gray-400" />
@@ -140,9 +230,17 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+              disabled={isLoading}
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-md transition-colors"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isLogin ? 'Signing In...' : 'Creating Account...'}
+                </div>
+              ) : (
+                isLogin ? 'Sign In' : 'Create Account'
+              )}
             </button>
           </div>
         </form>

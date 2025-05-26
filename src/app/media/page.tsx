@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Mock media data
-const mediaItems = [
+// Note: In a real application, media would be fetched from a CMS or API
+// For now, we'll show a coming soon message
+const mediaItems: any[] = [
   {
     id: 1,
     title: 'Mispri Launches New Seasonal Collection',
@@ -81,6 +82,9 @@ const pressReleases = [
   }
 ];
 
+// For now, show empty media to avoid demo data
+const actualMediaItems: any[] = [];
+
 export default function MediaPage() {
   return (
     <div className="container mx-auto px-4 py-12">
@@ -92,8 +96,39 @@ export default function MediaPage() {
         </p>
 
         {/* Media Coverage */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {mediaItems.map((item) => (
+        {actualMediaItems.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center mb-16">
+            <div className="mb-6">
+              <svg className="mx-auto h-20 w-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Media Coverage Coming Soon!</h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              We're working on sharing our latest news, press releases, and media coverage.
+              Stay tuned for exciting updates about Mispri!
+            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-500">In the meantime, explore our products:</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/products"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  Shop Now
+                </Link>
+                <Link
+                  href="/about"
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                >
+                  About Us
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {actualMediaItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative h-48">
                 <Image
@@ -123,13 +158,23 @@ export default function MediaPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Press Releases */}
         <div className="bg-gray-50 rounded-lg p-8 mb-16">
           <h2 className="text-2xl font-semibold mb-6">Press Releases</h2>
           <div className="space-y-6">
-            {pressReleases.map((release) => (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No press releases available at this time.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Future: When press releases exist, show them here */}
+        {false && (
+          <div className="space-y-6">
+            {[].map((release) => (
               <div key={release.id} className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-lg font-medium">{release.title}</h3>
@@ -145,7 +190,7 @@ export default function MediaPage() {
               </div>
             ))}
           </div>
-        </div>
+        )}
 
         {/* Media Inquiries */}
         <div className="bg-white rounded-lg shadow-md p-8">

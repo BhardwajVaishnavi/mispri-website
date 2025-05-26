@@ -1,4 +1,3 @@
-import { prisma } from './db';
 import { Category, Pincode, Product, User } from './types';
 
 /**
@@ -6,28 +5,43 @@ import { Category, Pincode, Product, User } from './types';
  */
 export async function getCategories(): Promise<Category[]> {
   try {
-    // Get distinct categories from products
-    const categories = await prisma.product.findMany({
-      select: {
-        category: true,
-      },
-      distinct: ['category'],
-      where: {
-        isActive: true,
-      },
+    // Try to fetch from admin panel API
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      cache: 'no-store'
     });
 
-    // Transform to Category type and limit to 10 categories
-    return categories
-      .map((item) => ({
-        id: item.category,
-        name: item.category,
-        slug: item.category.toLowerCase().replace(/ /g, '-'),
-      }))
-      .slice(0, 10); // Limit to 10 categories
+    if (response.ok) {
+      const categories = await response.json();
+      if (Array.isArray(categories)) {
+        return categories.map((cat: any) => ({
+          id: cat.id || cat.category || cat.name,
+          name: cat.name || cat.category,
+          slug: (cat.slug || cat.name || cat.category).toLowerCase().replace(/ /g, '-'),
+        })).slice(0, 10);
+      }
+    }
+
+    // Fallback to default categories
+    return [
+      { id: 'flowers', name: 'Flowers', slug: 'flowers' },
+      { id: 'cakes', name: 'Cakes', slug: 'cakes' },
+      { id: 'birthday', name: 'Birthday', slug: 'birthday' },
+      { id: 'anniversary', name: 'Anniversary', slug: 'anniversary' },
+      { id: 'gifts', name: 'Gifts', slug: 'gifts' },
+      { id: 'combos', name: 'Combos', slug: 'combos' },
+    ];
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return [];
+    // Return default categories on error
+    return [
+      { id: 'flowers', name: 'Flowers', slug: 'flowers' },
+      { id: 'cakes', name: 'Cakes', slug: 'cakes' },
+      { id: 'birthday', name: 'Birthday', slug: 'birthday' },
+      { id: 'anniversary', name: 'Anniversary', slug: 'anniversary' },
+      { id: 'gifts', name: 'Gifts', slug: 'gifts' },
+      { id: 'combos', name: 'Combos', slug: 'combos' },
+    ];
   }
 }
 
@@ -62,29 +76,17 @@ export async function checkPincode(code: string): Promise<Pincode | null> {
  */
 export async function getProductsByCategory(category: string): Promise<Product[]> {
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        category: {
-          equals: category,
-          mode: 'insensitive',
-        },
-        isActive: true,
-      },
-      include: {
-        productImages: {
-          where: {
-            isMain: true,
-          },
-          take: 1,
-        },
-      },
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products?categoryId=${encodeURIComponent(category)}`, {
+      cache: 'no-store'
     });
 
-    return products.map(product => ({
-      ...product,
-      description: product.description || undefined,
-      imageUrl: product.imageUrl || undefined
-    }));
+    if (response.ok) {
+      const products = await response.json();
+      return Array.isArray(products) ? products : [];
+    }
+
+    return [];
   } catch (error) {
     console.error(`Error fetching products for category ${category}:`, error);
     return [];
@@ -96,18 +98,17 @@ export async function getProductsByCategory(category: string): Promise<Product[]
  */
 export async function getProductById(id: string): Promise<Product | null> {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        productImages: true,
-      },
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      cache: 'no-store'
     });
 
-    return product ? {
-      ...product,
-      description: product.description || undefined,
-      imageUrl: product.imageUrl || undefined
-    } : null;
+    if (response.ok) {
+      const product = await response.json();
+      return product;
+    }
+
+    return null;
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);
     return null;
@@ -119,46 +120,17 @@ export async function getProductById(id: string): Promise<Product | null> {
  */
 export async function searchProducts(query: string): Promise<Product[]> {
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        OR: [
-          {
-            name: {
-              contains: query,
-              mode: 'insensitive',
-            },
-          },
-          {
-            description: {
-              contains: query,
-              mode: 'insensitive',
-            },
-          },
-          {
-            category: {
-              contains: query,
-              mode: 'insensitive',
-            },
-          },
-        ],
-        isActive: true,
-      },
-      include: {
-        productImages: {
-          where: {
-            isMain: true,
-          },
-          take: 1,
-        },
-      },
-      take: 20,
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+    const response = await fetch(`${API_BASE_URL}/products?search=${encodeURIComponent(query)}`, {
+      cache: 'no-store'
     });
 
-    return products.map(product => ({
-      ...product,
-      description: product.description || undefined,
-      imageUrl: product.imageUrl || undefined
-    }));
+    if (response.ok) {
+      const products = await response.json();
+      return Array.isArray(products) ? products.slice(0, 20) : [];
+    }
+
+    return [];
   } catch (error) {
     console.error(`Error searching products for "${query}":`, error);
     return [];

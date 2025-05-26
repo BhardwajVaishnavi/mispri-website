@@ -1,7 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['picsum.photos', 'mispri-pi.vercel.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mispri-pi.vercel.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mispri24.vercel.app',
+      },
+    ],
     unoptimized: process.env.NODE_ENV === 'production',
   },
   typescript: {

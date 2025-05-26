@@ -49,15 +49,11 @@ This is the customer-facing e-commerce website for Bakery Shop, built with Next.
 4. Set up environment variables:
    Create a `.env` file in the website directory with the following content:
    ```
-   DATABASE_URL="postgresql://neondb_owner:npg_9RdDXim4NLHw@ep-flat-snow-a4nohacn-pooler.us-east-1.aws.neon.tech/neondb?schema=bakery&sslmode=require"
+   NEXT_PUBLIC_API_URL="https://mispri24.vercel.app/api"
    NEXT_PUBLIC_APP_URL="http://localhost:3001"
-   NEXT_PUBLIC_ADMIN_URL="http://localhost:3000"
+   NEXT_PUBLIC_ADMIN_URL="https://mispri24.vercel.app"
    ```
-5. Generate Prisma client:
-   ```bash
-   npx prisma generate
-   ```
-6. Start the development server:
+5. Start the development server:
    ```bash
    npm run dev
    ```
@@ -109,9 +105,7 @@ Value: <Vercel IP address>
 │   │   ├── /ProductCard.tsx  # Product card component
 │   │   └── /...              # Other components
 │   └── /lib                  # Utility functions
-│       └── /db.ts            # Database client
-├── /prisma                   # Prisma configuration
-│   └── /schema.prisma        # Database schema
+│       └── /api.ts           # API client functions
 ├── /public                   # Static assets
 └── /...                      # Configuration files
 ```
@@ -120,9 +114,9 @@ Value: <Vercel IP address>
 
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [Prisma](https://www.prisma.io/) - ORM
-- [PostgreSQL](https://www.postgresql.org/) - Database
 - [React Icons](https://react-icons.github.io/react-icons/) - Icon library
+- [Admin Panel API](https://mispri24.vercel.app/api) - Backend integration
+- [NeonDB PostgreSQL](https://neon.tech/) - Database (via admin panel)
 
 ## Future Enhancements
 

@@ -2,27 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, email, password, phone } = body;
-
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Name, email, and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Forward to admin panel API
+    const { firstName, lastName, email, password, phone } = await request.json();
+    
+    // Forward the request to the admin panel API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-
+    
     const response = await fetch(`${API_BASE_URL}/auth/customer-register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        firstName: name.split(' ')[0],
-        lastName: name.split(' ').slice(1).join(' ') || '',
+        firstName,
+        lastName,
         email,
         password,
         phone,
@@ -37,16 +29,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userData = await response.json();
-
-    return NextResponse.json({
-      user: userData,
-    });
+    const customerData = await response.json();
+    return NextResponse.json(customerData);
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Customer registration error:', error);
     return NextResponse.json(
-      { error: 'An error occurred during registration' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }

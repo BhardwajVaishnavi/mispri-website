@@ -1,52 +1,110 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiCreditCard, FiCheckCircle } from 'react-icons/fi';
-
-// Metadata is moved to layout.tsx since this is a client component
-// title: 'Checkout - Bakery Shop',
-// description: 'Complete your purchase'
-
-// Mock cart data (in a real app, this would come from a database or state management)
-const cartItems = [
-  {
-    id: '1',
-    name: 'Red Rose Bouquet',
-    price: 799,
-    quantity: 1,
-    image: 'https://picsum.photos/seed/redrose/800/600',
-  },
-  {
-    id: '2',
-    name: 'Chocolate Truffle Cake',
-    price: 899,
-    quantity: 2,
-    image: 'https://picsum.photos/seed/choctruffle/800/600',
-  },
-];
-
-const subtotal = cartItems.reduce(
-  (total, item) => total + item.price * item.quantity,
-  0
-);
-const shipping = subtotal > 1000 ? 0 : 100;
-const total = subtotal + shipping;
+import { useRouter } from 'next/navigation';
+import { FiCreditCard, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
+import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [orderComplete, setOrderComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'India',
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { cartItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Calculate totals
+  const subtotal = cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 1000 ? 0 : 100;
+  const total = subtotal + shipping;
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (cartItems.length === 0 && !orderComplete) {
+      router.push('/cart');
+    }
+  }, [cartItems.length, orderComplete, router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (step === 1) {
       setStep(2);
       window.scrollTo(0, 0);
     } else {
-      setOrderComplete(true);
-      window.scrollTo(0, 0);
+      setIsSubmitting(true);
+
+      try {
+        // Create order
+        const orderData = {
+          items: cartItems.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          shippingAddress: {
+            street: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.postalCode,
+            country: formData.country,
+          },
+          paymentMethod: paymentMethod,
+          totalAmount: total,
+          subtotal: subtotal,
+          shipping: shipping,
+          status: paymentMethod === 'cod' ? 'pending' : 'completed',
+        };
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+
+        if (response.ok) {
+          const order = await response.json();
+          clearCart();
+          setOrderComplete(true);
+          window.scrollTo(0, 0);
+        } else {
+          throw new Error('Failed to create order');
+        }
+      } catch (error) {
+        console.error('Order creation error:', error);
+        alert('Failed to place order. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -111,6 +169,9 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
                     />
@@ -122,6 +183,9 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
                     />

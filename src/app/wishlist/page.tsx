@@ -3,55 +3,79 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiTrash2, FiShoppingCart } from 'react-icons/fi';
-
-// Mock wishlist data
-const initialWishlistItems = [
-  {
-    id: '1',
-    name: 'Red Rose Bouquet',
-    price: 799,
-    image: '/images/flowers/rose_bouquet.jpg',
-    inStock: true,
-  },
-  {
-    id: '2',
-    name: 'Chocolate Truffle Cake',
-    price: 899,
-    image: '/images/cakes/chocolate_cake.jpg',
-    inStock: true,
-  },
-  {
-    id: '3',
-    name: 'Birthday Gift Hamper',
-    price: 1499,
-    image: '/images/combos/gift_combo.jpg',
-    inStock: false,
-  },
-];
+import { FiTrash2, FiShoppingCart, FiHeart } from 'react-icons/fi';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function WishlistPage() {
-  const [wishlistItems, setWishlistItems] = useState(initialWishlistItems);
+  const { wishlistItems, removeFromWishlist, isLoading } = useWishlist();
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const [movingToCart, setMovingToCart] = useState<string | null>(null);
 
-  const removeItem = (id: string) => {
-    setWishlistItems(wishlistItems.filter((item) => item.id !== id));
+  const moveToCart = async (item: any) => {
+    setMovingToCart(item.id);
+    try {
+      // Add to cart
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+      });
+
+      // Remove from wishlist
+      await removeFromWishlist(item.id);
+
+      // Show success message
+      alert('Item moved to cart successfully!');
+    } catch (error) {
+      console.error('Error moving item to cart:', error);
+      alert('Failed to move item to cart. Please try again.');
+    } finally {
+      setMovingToCart(null);
+    }
   };
 
-  const moveToCart = (id: string) => {
-    // In a real app, this would call an API to add the item to the cart
-    // For now, we'll just remove it from the wishlist
-    removeItem(id);
-    // Show a success message or redirect to cart
-    alert('Item added to cart!');
-  };
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">My Wishlist</h1>
+        <div className="flex items-center text-gray-600">
+          <FiHeart className="mr-2" />
+          <span>{wishlistItems.length} item{wishlistItems.length !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+
+      {!isAuthenticated && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-800">
+            <Link href="/login" className="font-medium hover:underline">
+              Sign in
+            </Link>{' '}
+            to sync your wishlist across devices and save it permanently.
+          </p>
+        </div>
+      )}
 
       {wishlistItems.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <p className="text-xl text-gray-600 mb-6">Your wishlist is empty</p>
+          <FiHeart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <p className="text-xl text-gray-600 mb-2">Your wishlist is empty</p>
+          <p className="text-gray-500 mb-6">Save items you love to your wishlist</p>
           <Link
             href="/products"
             className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-md transition-colors"
@@ -85,7 +109,7 @@ export default function WishlistPage() {
                     <div className="flex items-center">
                       <div className="h-16 w-16 relative flex-shrink-0 mr-4">
                         <Image
-                          src={item.image}
+                          src={item.image || `https://picsum.photos/seed/${item.id}/200/200`}
                           alt={item.name}
                           fill
                           className="object-cover rounded-md"
@@ -98,6 +122,9 @@ export default function WishlistPage() {
                         >
                           {item.name}
                         </Link>
+                        {item.category && (
+                          <p className="text-sm text-gray-500 mt-1">{item.category}</p>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -118,18 +145,25 @@ export default function WishlistPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex space-x-3">
                       <button
-                        className={`text-primary-600 hover:text-primary-800 flex items-center ${
-                          !item.inStock && 'opacity-50 cursor-not-allowed'
+                        className={`text-primary-600 hover:text-primary-800 flex items-center transition-colors ${
+                          (!item.inStock || movingToCart === item.id) && 'opacity-50 cursor-not-allowed'
                         }`}
-                        onClick={() => item.inStock && moveToCart(item.id)}
-                        disabled={!item.inStock}
+                        onClick={() => item.inStock && moveToCart(item)}
+                        disabled={!item.inStock || movingToCart === item.id}
                       >
-                        <FiShoppingCart className="mr-1" />
-                        <span className="text-sm">Add to Cart</span>
+                        {movingToCart === item.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-1"></div>
+                        ) : (
+                          <FiShoppingCart className="mr-1" />
+                        )}
+                        <span className="text-sm">
+                          {movingToCart === item.id ? 'Moving...' : 'Add to Cart'}
+                        </span>
                       </button>
                       <button
-                        className="text-red-500 hover:text-red-700 flex items-center"
-                        onClick={() => removeItem(item.id)}
+                        className="text-red-500 hover:text-red-700 flex items-center transition-colors"
+                        onClick={() => removeFromWishlist(item.id)}
+                        disabled={isLoading}
                       >
                         <FiTrash2 className="mr-1" />
                         <span className="text-sm">Remove</span>

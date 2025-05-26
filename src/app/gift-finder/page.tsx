@@ -1,81 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiFilter, FiX, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
-// Mock product data
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Red Rose Bouquet',
-    price: 799,
-    image: '/images/flowers/rose_bouquet.jpg',
-    category: 'Flowers',
-    occasion: ['Birthday', 'Anniversary', 'Valentine\'s Day'],
-    recipient: ['Partner', 'Mother', 'Friend'],
-    priceRange: '500-1000',
-  },
-  {
-    id: '2',
-    name: 'Chocolate Truffle Cake',
-    price: 899,
-    image: '/images/cakes/chocolate_cake.jpg',
-    category: 'Cakes',
-    occasion: ['Birthday', 'Anniversary', 'Celebration'],
-    recipient: ['Partner', 'Friend', 'Colleague'],
-    priceRange: '500-1000',
-  },
-  {
-    id: '3',
-    name: 'Mixed Flower Bouquet',
-    price: 599,
-    image: '/images/flowers/mixed_bouquet.jpg',
-    category: 'Flowers',
-    occasion: ['Birthday', 'Get Well Soon', 'Congratulations'],
-    recipient: ['Mother', 'Friend', 'Colleague'],
-    priceRange: '500-1000',
-  },
-  {
-    id: '4',
-    name: 'Birthday Gift Hamper',
-    price: 1499,
-    image: '/images/combos/gift_combo.jpg',
-    category: 'Combos',
-    occasion: ['Birthday'],
-    recipient: ['Partner', 'Friend', 'Colleague'],
-    priceRange: '1000-2000',
-  },
-  {
-    id: '5',
-    name: 'Anniversary Special Combo',
-    price: 2499,
-    image: '/images/combos/cake_flower_combo.jpg',
-    category: 'Combos',
-    occasion: ['Anniversary'],
-    recipient: ['Partner'],
-    priceRange: '2000+',
-  },
-  {
-    id: '6',
-    name: 'Potted Plant',
-    price: 699,
-    image: '/images/plants/potted_plant.jpg',
-    category: 'Plants',
-    occasion: ['Housewarming', 'Get Well Soon'],
-    recipient: ['Friend', 'Colleague', 'Mother'],
-    priceRange: '500-1000',
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  category: string;
+  productImages?: { url: string; isMain: boolean }[];
+}
 
 // Filter options
 const occasions = ['Birthday', 'Anniversary', 'Valentine\'s Day', 'Get Well Soon', 'Congratulations', 'Housewarming'];
 const recipients = ['Partner', 'Mother', 'Father', 'Friend', 'Colleague'];
-const categories = ['Flowers', 'Cakes', 'Plants', 'Combos', 'Personalised'];
 const priceRanges = ['Under 500', '500-1000', '1000-2000', '2000+'];
 
 export default function GiftFinderPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -88,12 +35,49 @@ export default function GiftFinderPage() {
     price: true,
   });
 
+  // Fetch products and categories
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/categories`)
+        ]);
+
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          setProducts(Array.isArray(productsData) ? productsData : []);
+        }
+
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json();
+          const categoryNames = Array.isArray(categoriesData)
+            ? categoriesData.map((c: any) => c.name || c.category || c)
+            : [];
+          setCategories(categoryNames);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Helper function to determine price range
+  const getPriceRange = (price: number): string => {
+    if (price < 500) return 'Under 500';
+    if (price <= 1000) return '500-1000';
+    if (price <= 2000) return '1000-2000';
+    return '2000+';
+  };
+
   // Filter products based on selected filters
-  const filteredProducts = mockProducts.filter(product => {
-    if (selectedOccasion && !product.occasion.includes(selectedOccasion)) return false;
-    if (selectedRecipient && !product.recipient.includes(selectedRecipient)) return false;
+  const filteredProducts = products.filter(product => {
     if (selectedCategory && product.category !== selectedCategory) return false;
-    if (selectedPriceRange && product.priceRange !== selectedPriceRange) return false;
+    if (selectedPriceRange && getPriceRange(product.price) !== selectedPriceRange) return false;
     return true;
   });
 
@@ -114,7 +98,7 @@ export default function GiftFinderPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Gift Finder</h1>
-      
+
       <div className="mb-8">
         <p className="text-gray-600">
           Find the perfect gift for your loved ones. Use our gift finder to filter by occasion, recipient, category, and price range.
@@ -288,7 +272,12 @@ export default function GiftFinderPage() {
 
         {/* Product Grid */}
         <div className="lg:w-3/4">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading products...</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-600 mb-4">No products match your selected filters.</p>
               <button
@@ -300,34 +289,38 @@ export default function GiftFinderPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <Link href={`/product/${product.id}`}>
-                    <div className="aspect-square relative">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900">{product.name}</h3>
-                      <p className="text-primary-600 font-bold mt-1">₹{product.price.toFixed(2)}</p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {product.occasion.slice(0, 1).map((occ) => (
-                          <span key={occ} className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                            {occ}
-                          </span>
-                        ))}
-                        <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                          {product.category}
-                        </span>
+              {filteredProducts.map((product) => {
+                const imageUrl = product.productImages && product.productImages.length > 0
+                  ? product.productImages.find(img => img.isMain)?.url || product.productImages[0].url
+                  : product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`;
+
+                return (
+                  <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <Link href={`/product/${product.id}`}>
+                      <div className="aspect-square relative">
+                        <Image
+                          src={imageUrl}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+                      <div className="p-4">
+                        <h3 className="font-medium text-gray-900">{product.name}</h3>
+                        <p className="text-primary-600 font-bold mt-1">₹{product.price.toFixed(2)}</p>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                            {product.category}
+                          </span>
+                          <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                            {getPriceRange(product.price)}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
