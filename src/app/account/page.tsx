@@ -1,25 +1,78 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FiUser, FiShoppingBag, FiHeart, FiMapPin, FiLogOut } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Metadata is moved to layout.tsx since this is a client component
 // title: 'My Account - Bakery Shop',
 // description: 'Manage your account and view your orders'
 
-// Mock user data (in a real app, this would come from a database or state management)
-const user = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  phone: '+91 9876543210',
-};
-
-// Note: In a real application, these would be fetched from the API based on the authenticated user
-// For now, we'll show empty states with proper messaging
-
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [customerProfile, setCustomerProfile] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  // Load customer data
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      loadCustomerData();
+    }
+  }, [user, isAuthenticated]);
+
+  const loadCustomerData = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      // Load customer profile
+      const profileResponse = await fetch(`/api/customer-profile/${user.id}`);
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json();
+        setCustomerProfile(profile);
+      }
+
+      // Load orders
+      const ordersResponse = await fetch(`/api/customer-orders?userId=${user.id}`);
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        setOrders(ordersData);
+      }
+
+      // Load addresses
+      const addressesResponse = await fetch(`/api/addresses?userId=${user.id}`);
+      if (addressesResponse.ok) {
+        const addressesData = await addressesResponse.json();
+        setAddresses(addressesData);
+      }
+    } catch (error) {
+      console.error('Error loading customer data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
+  if (!isAuthenticated || !user) {
+    return null; // Will redirect to login
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -80,6 +133,7 @@ export default function AccountPage() {
               </button>
               <button
                 className="w-full text-left px-4 py-2 rounded-md flex items-center text-gray-700 hover:bg-gray-50"
+                onClick={handleLogout}
               >
                 <FiLogOut className="mr-3" />
                 Logout
@@ -104,7 +158,7 @@ export default function AccountPage() {
                         type="text"
                         id="name"
                         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={user.name}
+                        defaultValue={customerProfile?.user?.name || user.name}
                       />
                     </div>
                     <div>
@@ -115,7 +169,7 @@ export default function AccountPage() {
                         type="email"
                         id="email"
                         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={user.email}
+                        defaultValue={customerProfile?.user?.email || user.email}
                       />
                     </div>
                   </div>
@@ -128,7 +182,7 @@ export default function AccountPage() {
                         type="tel"
                         id="phone"
                         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={user.phone}
+                        defaultValue={customerProfile?.phone || ''}
                       />
                     </div>
                   </div>
@@ -193,23 +247,61 @@ export default function AccountPage() {
             {activeTab === 'orders' && (
               <div>
                 <h2 className="text-xl font-semibold mb-6">My Orders</h2>
-                <div className="bg-white border rounded-lg p-8 text-center">
-                  <div className="mb-4">
-                    <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+                {orders.length === 0 ? (
+                  <div className="bg-white border rounded-lg p-8 text-center">
+                    <div className="mb-4">
+                      <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      You haven't placed any orders yet. Start shopping to see your order history here.
+                    </p>
+                    <Link
+                      href="/products"
+                      className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                      Start Shopping
+                    </Link>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    You haven't placed any orders yet. Start shopping to see your order history here.
-                  </p>
-                  <Link
-                    href="/products"
-                    className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                  >
-                    Start Shopping
-                  </Link>
-                </div>
+                ) : (
+                  <div className="space-y-6">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex flex-wrap justify-between mb-4">
+                          <div>
+                            <p className="font-medium">Order #{order.orderNumber || order.id}</p>
+                            <p className="text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                              order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="border-t pt-4">
+                          <p className="text-sm text-gray-600 mb-2">Items:</p>
+                          <ul className="space-y-1 mb-4">
+                            {order.orderItems?.map((item: any, index: number) => (
+                              <li key={index} className="text-sm">
+                                {item.quantity} x {item.product?.name || 'Product'}
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="flex justify-between">
+                            <p className="font-medium">Total:</p>
+                            <p className="font-medium">₹{order.totalAmount?.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

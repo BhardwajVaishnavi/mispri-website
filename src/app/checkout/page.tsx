@@ -10,9 +10,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [orderComplete, setOrderComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,8 +27,27 @@ export default function CheckoutPage() {
   });
 
   const { cartItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  // Pre-fill form with user data
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.name.split(' ')[0] || '',
+        lastName: user.name.split(' ').slice(1).join(' ') || '',
+        email: user.email || '',
+      }));
+    }
+  }, [user]);
 
   // Calculate totals
   const subtotal = cartItems.reduce(
@@ -61,29 +81,29 @@ export default function CheckoutPage() {
       try {
         // Create order
         const orderData = {
+          userId: user?.id,
           items: cartItems.map(item => ({
             productId: item.id,
             quantity: item.quantity,
-            price: item.price,
+            unitPrice: item.price,
           })),
-          customerName: `${formData.firstName} ${formData.lastName}`,
-          customerEmail: formData.email,
-          customerPhone: formData.phone,
           shippingAddress: {
             street: formData.address,
             city: formData.city,
             state: formData.state,
             pincode: formData.postalCode,
             country: formData.country,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
           },
-          paymentMethod: paymentMethod,
+          paymentMethod: paymentMethod.toUpperCase(),
           totalAmount: total,
           subtotal: subtotal,
           shipping: shipping,
-          status: paymentMethod === 'cod' ? 'pending' : 'completed',
         };
 
-        const response = await fetch('/api/orders', {
+        const response = await fetch('/api/customer-orders', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -93,15 +113,17 @@ export default function CheckoutPage() {
 
         if (response.ok) {
           const order = await response.json();
+          setOrderNumber(order.orderNumber || order.id);
           clearCart();
           setOrderComplete(true);
           window.scrollTo(0, 0);
         } else {
-          throw new Error('Failed to create order');
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create order');
         }
       } catch (error) {
         console.error('Order creation error:', error);
-        alert('Failed to place order. Please try again.');
+        alert(`Failed to place order: ${error.message}`);
       } finally {
         setIsSubmitting(false);
       }
@@ -121,7 +143,7 @@ export default function CheckoutPage() {
             We have sent a confirmation email with your order details.
           </p>
           <p className="text-gray-800 font-medium mb-8">
-            Order Number: #ORD-{Math.floor(100000 + Math.random() * 900000)}
+            Order Number: #{orderNumber || 'Processing...'}
           </p>
           <Link
             href="/"
@@ -198,6 +220,9 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />
@@ -209,6 +234,9 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
                     className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />
@@ -220,6 +248,9 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
                     className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />
@@ -232,6 +263,9 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="city"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
                     />
@@ -243,6 +277,9 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
                     />
@@ -254,6 +291,9 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="postalCode"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
                     />
@@ -265,6 +305,9 @@ export default function CheckoutPage() {
                   </label>
                   <select
                     id="country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleInputChange}
                     className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   >
@@ -414,9 +457,10 @@ export default function CheckoutPage() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+                    disabled={isSubmitting}
+                    className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-md transition-colors"
                   >
-                    Place Order
+                    {isSubmitting ? 'Processing...' : 'Place Order'}
                   </button>
                 </div>
               </form>

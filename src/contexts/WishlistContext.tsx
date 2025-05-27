@@ -31,32 +31,59 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoading, setIsLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  // Load wishlist from localStorage on initial render
+  // Load wishlist from backend or localStorage on initial render
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const savedWishlist = localStorage.getItem(`wishlist_${user.id}`);
-      if (savedWishlist) {
+    const loadWishlist = async () => {
+      if (isAuthenticated && user) {
         try {
-          const parsedWishlist = JSON.parse(savedWishlist);
-          setWishlistItems(parsedWishlist);
-          setWishlistCount(parsedWishlist.length);
+          // Load wishlist from backend
+          const response = await fetch(`/api/wishlist?userId=${user.id}`);
+          if (response.ok) {
+            const wishlistData = await response.json();
+            const wishlistItems = wishlistData.map((item: any) => ({
+              id: item.products.id,
+              name: item.products.name,
+              price: item.products.price,
+              image: item.products.imageUrl || '/images/placeholder.jpg',
+              category: item.products.category,
+              inStock: true,
+              description: item.products.description,
+            }));
+            setWishlistItems(wishlistItems);
+            setWishlistCount(wishlistItems.length);
+            return;
+          }
         } catch (error) {
-          console.error('Error parsing wishlist from localStorage:', error);
+          console.error('Error loading wishlist from backend:', error);
+        }
+
+        // Fallback to localStorage for authenticated users
+        const savedWishlist = localStorage.getItem(`wishlist_${user.id}`);
+        if (savedWishlist) {
+          try {
+            const parsedWishlist = JSON.parse(savedWishlist);
+            setWishlistItems(parsedWishlist);
+            setWishlistCount(parsedWishlist.length);
+          } catch (error) {
+            console.error('Error parsing wishlist from localStorage:', error);
+          }
+        }
+      } else {
+        // For non-authenticated users, use a general wishlist
+        const savedWishlist = localStorage.getItem('wishlist_guest');
+        if (savedWishlist) {
+          try {
+            const parsedWishlist = JSON.parse(savedWishlist);
+            setWishlistItems(parsedWishlist);
+            setWishlistCount(parsedWishlist.length);
+          } catch (error) {
+            console.error('Error parsing guest wishlist from localStorage:', error);
+          }
         }
       }
-    } else {
-      // For non-authenticated users, use a general wishlist
-      const savedWishlist = localStorage.getItem('wishlist_guest');
-      if (savedWishlist) {
-        try {
-          const parsedWishlist = JSON.parse(savedWishlist);
-          setWishlistItems(parsedWishlist);
-          setWishlistCount(parsedWishlist.length);
-        } catch (error) {
-          console.error('Error parsing guest wishlist from localStorage:', error);
-        }
-      }
-    }
+    };
+
+    loadWishlist();
   }, [isAuthenticated, user]);
 
   // Save wishlist to localStorage whenever it changes
@@ -71,7 +98,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // Check if item already exists in wishlist
       const existingItemIndex = wishlistItems.findIndex(wishlistItem => wishlistItem.id === item.id);
-      
+
       if (existingItemIndex >= 0) {
         // Item already in wishlist, don't add again
         console.log('Item already in wishlist');
@@ -111,18 +138,14 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setWishlistItems(prevItems => prevItems.filter(item => item.id !== id));
 
-      // If user is authenticated, sync with backend (future enhancement)
+      // If user is authenticated, sync with backend
       if (isAuthenticated && user) {
         try {
-          await fetch('/api/wishlist', {
+          await fetch(`/api/wishlist?userId=${user.id}&productId=${id}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              userId: user.id,
-              productId: id,
-            }),
           });
         } catch (error) {
           console.error('Error syncing wishlist removal with backend:', error);
@@ -147,11 +170,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <WishlistContext.Provider value={{ 
-      wishlistItems, 
-      wishlistCount, 
-      addToWishlist, 
-      removeFromWishlist, 
+    <WishlistContext.Provider value={{
+      wishlistItems,
+      wishlistCount,
+      addToWishlist,
+      removeFromWishlist,
       isInWishlist,
       clearWishlist,
       isLoading

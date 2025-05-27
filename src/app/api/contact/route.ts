@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { name, email, phone, subject, message } = await request.json();
-    
+
     // Validate required fields
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Forward the request to the admin panel API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+
     const response = await fetch(`${API_BASE_URL}/contact`, {
       method: 'POST',
       headers: {
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
       // 1. Save to database
       // 2. Send email notification
       // 3. Add to CRM system
-      
+
       return NextResponse.json({
         success: true,
         message: 'Thank you for your message. We will get back to you soon!',
