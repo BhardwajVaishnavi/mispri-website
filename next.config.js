@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'mispri24.vercel.app',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
     unoptimized: process.env.NODE_ENV === 'production',
   },

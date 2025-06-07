@@ -10,6 +10,7 @@ interface ProductActionsProps {
     name: string;
     price: number;
     image: string;
+    unit?: string;
   };
 }
 
@@ -38,44 +39,72 @@ export default function ProductActions({ product }: ProductActionsProps) {
         image: product.image,
       });
     }
-    
+
     // Show added to cart feedback
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
   return (
-    <div className="flex items-center mb-8">
-      <div className="flex items-center border rounded-md mr-4">
-        <button 
-          className="px-3 py-2 text-gray-600 hover:bg-gray-100"
-          onClick={decreaseQuantity}
-        >
-          -
-        </button>
-        <span className="px-4 py-2">{quantity}</span>
-        <button 
-          className="px-3 py-2 text-gray-600 hover:bg-gray-100"
-          onClick={increaseQuantity}
-        >
-          +
-        </button>
+    <div className="space-y-3 sm:space-y-4">
+      {/* Quantity Selector */}
+      <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center border border-gray-300 rounded-lg bg-white shadow-sm">
+          <button
+            className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-l-lg"
+            onClick={decreaseQuantity}
+            disabled={quantity <= 1}
+            aria-label="Decrease quantity"
+          >
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          </button>
+          <input
+            type="number"
+            value={quantity}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 1;
+              const clampedValue = Math.max(1, Math.min(99, value));
+              setQuantity(clampedValue);
+            }}
+            min={1}
+            max={99}
+            className="w-12 sm:w-16 px-2 sm:px-3 py-2 sm:py-3 text-center font-medium text-gray-900 border-0 focus:outline-none focus:ring-0 text-sm sm:text-base"
+            aria-label="Quantity"
+          />
+          <button
+            className="p-2 sm:p-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-r-lg"
+            onClick={increaseQuantity}
+            disabled={quantity >= 99}
+            aria-label="Increase quantity"
+          >
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+        <span className="text-xs sm:text-sm text-gray-600">({product.unit || 'piece'})</span>
       </div>
-      <button 
-        className={`${
-          addedToCart ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'
-        } text-white font-semibold py-2 px-6 rounded-md flex items-center transition-colors`}
+
+      {/* Add to Cart Button */}
+      <button
+        className={`w-full ${
+          addedToCart ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'
+        } text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center transition-colors shadow-sm text-sm sm:text-base`}
         onClick={handleAddToCart}
       >
         {addedToCart ? (
           <>
-            <FiCheck className="mr-2" />
-            Added to Cart
+            <FiCheck className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Added to Cart</span>
+            <span className="sm:hidden">Added</span>
           </>
         ) : (
           <>
-            <FiShoppingCart className="mr-2" />
-            Add to Cart
+            <FiShoppingCart className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Add to Cart</span>
+            <span className="sm:hidden">Add to Cart</span>
           </>
         )}
       </button>

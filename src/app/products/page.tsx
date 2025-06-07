@@ -8,7 +8,7 @@ export const metadata = {
 
 async function getCategories() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/categories`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/public/categories`, {
       cache: 'no-store'
     });
     if (!response.ok) {
@@ -25,7 +25,7 @@ async function getCategories() {
 
 async function getProducts() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/public/products`, {
       cache: 'no-store'
     });
     if (!response.ok) {
@@ -77,11 +77,24 @@ export default async function ProductsPage() {
 
         {/* Products Grid */}
         <div className="md:w-3/4 lg:w-4/5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="text-gray-400 text-8xl mb-6">🛒</div>
+              <h2 className="text-2xl font-bold text-gray-600 mb-4">No Products Available</h2>
+              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                There are currently no products in our catalog. Please check back later or contact us for more information.
+              </p>
+              <div className="text-sm text-gray-400">
+                Admin: Add products in the admin panel to see them here.
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

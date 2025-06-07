@@ -113,10 +113,12 @@ export default function CheckoutPage() {
 
         if (response.ok) {
           const order = await response.json();
-          setOrderNumber(order.orderNumber || order.id);
+          const orderNum = order.orderNumber || order.id;
+          setOrderNumber(orderNum);
           clearCart();
-          setOrderComplete(true);
-          window.scrollTo(0, 0);
+
+          // Redirect to order success page
+          router.push(`/order-success?orderNumber=${orderNum}`);
         } else {
           const error = await response.json();
           throw new Error(error.error || 'Failed to create order');

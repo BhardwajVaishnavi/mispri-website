@@ -22,7 +22,7 @@ const faqCategories = [
       },
       {
         question: 'Which areas do you deliver to?',
-        answer: 'We currently deliver to all areas within Bhubaneswar. You can check if we deliver to your location by entering your pincode on our website.'
+        answer: 'We deliver to all areas within Bhubaneswar, covering pincodes from 751001 to 751100. This includes Central Bhubaneswar, IT Corridor, Airport Area, Industrial Areas, and all suburbs. You can check if we deliver to your specific location by clicking "Deliver To" in the header or visiting our delivery areas page.'
       },
       {
         question: 'Is there a delivery charge?',
@@ -123,11 +123,11 @@ export default function FAQPage() {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">Frequently Asked Questions</h1>
-        
+
         <p className="text-center text-gray-600 mb-12">
           Find answers to common questions about our products, services, and policies.
         </p>
-        
+
         {/* Category Tabs */}
         <div className="flex flex-wrap justify-center mb-8">
           {faqCategories.map((category, index) => (
@@ -147,7 +147,7 @@ export default function FAQPage() {
             </button>
           ))}
         </div>
-        
+
         {/* FAQ Accordion */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {faqCategories[activeCategory].faqs.map((faq, index) => (
@@ -171,7 +171,7 @@ export default function FAQPage() {
             </div>
           ))}
         </div>
-        
+
         {/* Contact Section */}
         <div className="mt-12 bg-gray-50 rounded-lg p-6 text-center">
           <h2 className="text-xl font-semibold mb-4">Still have questions?</h2>

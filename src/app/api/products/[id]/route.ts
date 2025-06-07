@@ -6,11 +6,11 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    
-    // Forward the request to the admin panel API
+
+    // Forward the request to the admin panel PUBLIC API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+
+    const response = await fetch(`${API_BASE_URL}/public/products/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId');
     const search = searchParams.get('search');
 
-    // Forward the request to the admin panel API
+    // Forward the request to the admin panel PUBLIC API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
 
-    let apiUrl = `${API_BASE_URL}/products`;
+    let apiUrl = `${API_BASE_URL}/public/products`;
     const params = new URLSearchParams();
 
     if (categoryId) params.append('categoryId', categoryId);
