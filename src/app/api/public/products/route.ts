@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Forward the request to the main admin API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
-    
+    const { searchParams } = new URL(request.url);
+
     // Build the API URL with query parameters
     const apiUrl = new URL(`${API_BASE_URL}/products`);
     searchParams.forEach((value, key) => {
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     console.log('Public Products API: Successfully fetched', Array.isArray(data) ? data.length : 0, 'products');
-    
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Public Products API: Error:', error);
