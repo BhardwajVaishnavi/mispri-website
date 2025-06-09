@@ -77,8 +77,125 @@ function OrderSuccessContent() {
   }, [orderNumber]);
 
   const handleDownloadInvoice = () => {
-    // Mock invoice download
-    alert('Invoice download feature will be implemented with PDF generation');
+    if (!orderDetails) {
+      alert('Order details not loaded yet. Please wait and try again.');
+      return;
+    }
+
+    // Create a printable invoice
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to download the invoice');
+      return;
+    }
+
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - Order #${orderNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
+          .company-name { font-size: 28px; font-weight: bold; color: #2563eb; margin-bottom: 5px; }
+          .company-tagline { font-size: 14px; color: #666; }
+          .invoice-details { display: flex; justify-content: space-between; margin: 30px 0; }
+          .invoice-info, .customer-info { flex: 1; }
+          .invoice-info { margin-right: 20px; }
+          .section-title { font-size: 16px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+          th { background-color: #f8f9fa; font-weight: bold; color: #2563eb; }
+          .total-row { font-weight: bold; background-color: #f8f9fa; }
+          .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+          .thank-you { font-size: 18px; color: #2563eb; font-weight: bold; margin-bottom: 10px; }
+          @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">MISPRI</div>
+          <div class="company-tagline">Bakery & Flower Shop • Bhubaneswar, Odisha</div>
+        </div>
+
+        <div class="invoice-details">
+          <div class="invoice-info">
+            <div class="section-title">Invoice Details</div>
+            <p><strong>Order Number:</strong> #${orderNumber}</p>
+            <p><strong>Invoice Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Payment Status:</strong> Paid</p>
+            <p><strong>Order Status:</strong> Confirmed</p>
+          </div>
+          <div class="customer-info">
+            <div class="section-title">Delivery Address</div>
+            ${orderDetails.shippingAddress ? `
+              <p><strong>${orderDetails.shippingAddress.firstName} ${orderDetails.shippingAddress.lastName}</strong></p>
+              <p>${orderDetails.shippingAddress.street}</p>
+              <p>${orderDetails.shippingAddress.city}, ${orderDetails.shippingAddress.state} ${orderDetails.shippingAddress.pincode}</p>
+              <p>Phone: ${orderDetails.shippingAddress.phone}</p>
+            ` : '<p>Address not available</p>'}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orderDetails.items ? orderDetails.items.map((item: any) => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+              </tr>
+            `).join('') : '<tr><td colspan="4">No items found</td></tr>'}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" style="text-align: right;"><strong>Subtotal:</strong></td>
+              <td><strong>₹${orderDetails.totalAmount ? (orderDetails.totalAmount - 100).toFixed(2) : '0.00'}</strong></td>
+            </tr>
+            <tr>
+              <td colspan="3" style="text-align: right;"><strong>Shipping:</strong></td>
+              <td><strong>Free</strong></td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="3" style="text-align: right;"><strong>Total Amount:</strong></td>
+              <td><strong>₹${orderDetails.totalAmount ? orderDetails.totalAmount.toFixed(2) : '0.00'}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="footer">
+          <div class="thank-you">Thank you for your business!</div>
+          <p>This is a computer-generated invoice for Order #${orderNumber}</p>
+          <p>For any queries, contact us at support@mispri.com or call +91-XXXXXXXXXX</p>
+          <p>Visit us at: www.mispri.com</p>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
   };
 
   const handleShareOrder = async () => {
