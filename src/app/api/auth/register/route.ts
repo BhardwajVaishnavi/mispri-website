@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,70 +17,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Forward the request to the admin panel API
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+
+    // Split name into firstName and lastName for the admin API
+    const firstName = name.split(' ')[0] || '';
+    const lastName = name.split(' ').slice(1).join(' ') || '';
+
+    const response = await fetch(`${API_BASE_URL}/auth/customer-register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        email,
+        password,
+        phone,
+      }),
     });
 
-    if (existingUser) {
+    if (!response.ok) {
+      const error = await response.json();
       return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
+        { error: error.error || 'Registration failed' },
+        { status: response.status }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await response.json();
+    console.log('✅ Website Registration successful:', email);
 
-    // Create user and customer in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create user with CUSTOMER role
-      const user = await tx.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          role: 'CUSTOMER',
-        },
-      });
-
-      // Create customer profile
-      const customer = await tx.customer.create({
-        data: {
-          userId: user.id,
-          firstName: name.split(' ')[0] || '',
-          lastName: name.split(' ').slice(1).join(' ') || '',
-          phone: phone || null,
-          isSubscribed: false,
-        },
-      });
-
-      // Create cart for the user
-      await tx.cart.create({
-        data: {
-          userId: user.id,
-        },
-      });
-
-      return { user, customer };
-    });
-
-    console.log('✅ Website Registration successful:', result.user.email);
-
-    return NextResponse.json({
-      user: {
-        id: result.user.id,
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.role,
-      },
-      customer: {
-        id: result.customer.id,
-        firstName: result.customer.firstName,
-        lastName: result.customer.lastName,
-        phone: result.customer.phone,
-      },
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('❌ Website Registration error:', error);
     return NextResponse.json(
