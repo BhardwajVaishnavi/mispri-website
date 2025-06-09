@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
-    
+
     // Forward the request to the admin panel API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+
     const response = await fetch(`${API_BASE_URL}/auth/customer-login`, {
       method: 'POST',
       headers: {

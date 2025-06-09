@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 // No default categories - only show real categories from admin panel
 const defaultCategories: any[] = [];
 

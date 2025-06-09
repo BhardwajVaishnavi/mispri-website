@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Forward the request to the main admin API
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     console.log('Public Categories API: Successfully fetched', Array.isArray(data) ? data.length : 0, 'categories');
-    
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Public Categories API: Error:', error);
