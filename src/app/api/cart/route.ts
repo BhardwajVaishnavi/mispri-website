@@ -17,8 +17,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Forward the request to the admin panel API
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+    const API_BASE_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3002/api'  // Local admin panel
+      : (process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'); // Production admin panel
+
     const response = await fetch(`${API_BASE_URL}/cart?userId=${userId}`, {
       method: 'GET',
       headers: {
@@ -51,8 +53,10 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
 
     // Forward the request to the admin panel API
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+    const API_BASE_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3002/api'  // Local admin panel
+      : (process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'); // Production admin panel
+
     const response = await fetch(`${API_BASE_URL}/cart`, {
       method: 'POST',
       headers: {
@@ -86,8 +90,10 @@ export async function PUT(request: NextRequest) {
     const data = await request.json();
 
     // Forward the request to the admin panel API
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+    const API_BASE_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3002/api'  // Local admin panel
+      : (process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'); // Production admin panel
+
     const response = await fetch(`${API_BASE_URL}/cart`, {
       method: 'PUT',
       headers: {
@@ -123,13 +129,15 @@ export async function DELETE(request: NextRequest) {
     const productId = searchParams.get('productId');
 
     // Forward the request to the admin panel API
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    
+    const API_BASE_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3002/api'  // Local admin panel
+      : (process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'); // Production admin panel
+
     let url = `${API_BASE_URL}/cart?userId=${userId}`;
     if (productId) {
       url += `&productId=${productId}`;
     }
-    
+
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {

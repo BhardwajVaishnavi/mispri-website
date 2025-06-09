@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { FiMail, FiLock, FiUser, FiPhone, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +20,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    
+
     const success = await login(email, password);
     if (success && onSuccess) {
       onSuccess();
@@ -33,7 +34,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           {error}
         </div>
       )}
-      
+
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
           Email Address
@@ -53,7 +54,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           />
         </div>
       </div>
-      
+
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
           Password
@@ -84,7 +85,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           </button>
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <input
@@ -96,11 +97,11 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
             Remember me
           </label>
         </div>
-        <a href="#" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+        <Link href="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
           Forgot password?
-        </a>
+        </Link>
       </div>
-      
+
       <button
         type="submit"
         className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
@@ -108,12 +109,12 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       >
         {isLoading ? 'Signing in...' : 'Sign In'}
       </button>
-      
+
       <div className="relative flex items-center justify-center mt-6">
         <div className="border-t border-gray-300 absolute w-full"></div>
         <div className="bg-white px-3 relative text-sm text-gray-500">or continue with</div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
@@ -130,7 +131,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           Facebook
         </button>
       </div>
-      
+
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">
           Don't have an account?{' '}
@@ -178,11 +179,11 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    
+
     if (!validatePassword()) {
       return;
     }
-    
+
     const success = await register(name, email, password, phone);
     if (success && onSuccess) {
       onSuccess();
@@ -196,7 +197,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           {error}
         </div>
       )}
-      
+
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
           Full Name
@@ -216,7 +217,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           />
         </div>
       </div>
-      
+
       <div>
         <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">
           Email Address
@@ -236,7 +237,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           />
         </div>
       </div>
-      
+
       <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
           Phone Number (Optional)
@@ -255,7 +256,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           />
         </div>
       </div>
-      
+
       <div>
         <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">
           Password
@@ -290,7 +291,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           Password must be at least 8 characters long
         </p>
       </div>
-      
+
       <div>
         <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
           Confirm Password
@@ -313,7 +314,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           <p className="text-xs text-red-600 mt-1">{passwordError}</p>
         )}
       </div>
-      
+
       <div className="flex items-center">
         <input
           id="terms"
@@ -332,7 +333,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           </a>
         </label>
       </div>
-      
+
       <button
         type="submit"
         className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
@@ -340,7 +341,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       >
         {isLoading ? 'Creating Account...' : 'Create Account'}
       </button>
-      
+
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">
           Already have an account?{' '}

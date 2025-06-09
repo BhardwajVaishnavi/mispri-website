@@ -79,9 +79,24 @@ export default function CheckoutPage() {
       setIsSubmitting(true);
 
       try {
+        // Debug authentication
+        console.log('🔍 Checkout Debug Info:');
+        console.log('- User:', user);
+        console.log('- User ID:', user?.id);
+        console.log('- Is Authenticated:', isAuthenticated);
+        console.log('- Cart Items:', cartItems);
+
+        if (!user?.id) {
+          throw new Error('User not authenticated. Please log in to place an order.');
+        }
+
+        if (!cartItems || cartItems.length === 0) {
+          throw new Error('Your cart is empty. Please add items to your cart before checkout.');
+        }
+
         // Create order
         const orderData = {
-          userId: user?.id,
+          userId: user.id,
           items: cartItems.map(item => ({
             productId: item.id,
             quantity: item.quantity,
@@ -103,6 +118,8 @@ export default function CheckoutPage() {
           shipping: shipping,
         };
 
+        console.log('📦 Order Data:', orderData);
+
         const response = await fetch('/api/customer-orders', {
           method: 'POST',
           headers: {
@@ -111,8 +128,12 @@ export default function CheckoutPage() {
           body: JSON.stringify(orderData),
         });
 
+        console.log('📡 API Response Status:', response.status);
+
         if (response.ok) {
           const order = await response.json();
+          console.log('✅ Order Created Successfully:', order);
+
           const orderNum = order.orderNumber || order.id;
           setOrderNumber(orderNum);
           clearCart();
@@ -120,8 +141,18 @@ export default function CheckoutPage() {
           // Redirect to order success page
           router.push(`/order-success?orderNumber=${orderNum}`);
         } else {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to create order');
+          const errorText = await response.text();
+          console.error('❌ API Error Response:', errorText);
+
+          let errorMessage = 'Failed to create order';
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = errorText || errorMessage;
+          }
+
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('Order creation error:', error);
