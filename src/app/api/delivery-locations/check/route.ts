@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+
+// Dynamic route - prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +14,17 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Check if we're in build time (no database access during build)
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
+    // Dynamic import to avoid build-time database connection
+    const { prisma } = await import('@/lib/db');
 
     // Check if delivery is available for this pincode
     const deliveryLocation = await prisma.deliveryLocation.findFirst({
@@ -41,6 +54,17 @@ export async function GET(request: NextRequest) {
 // Seed some delivery locations for Bhubaneswar
 export async function POST(request: NextRequest) {
   try {
+    // Check if we're in build time (no database access during build)
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
+    // Dynamic import to avoid build-time database connection
+    const { prisma } = await import('@/lib/db');
+
     const bhubaneswarPincodes = [
       { pincode: '751001', area: 'Bhubaneswar GPO', city: 'Bhubaneswar', state: 'Odisha', deliveryFee: 0 },
       { pincode: '751002', area: 'Sachivalaya Marg', city: 'Bhubaneswar', state: 'Odisha', deliveryFee: 0 },
