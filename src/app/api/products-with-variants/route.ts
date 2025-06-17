@@ -37,7 +37,39 @@ export async function GET(request: NextRequest) {
     const productsData = await response.json();
     console.log('Website Products with Variants API: Products loaded successfully');
 
-    return NextResponse.json(productsData);
+    // Add discount calculations to products and variants
+    const processedData = {
+      ...productsData,
+      products: productsData.products ? productsData.products.map((product: any) => {
+        // Calculate discount percentage for main product
+        let discountPercentage = 0;
+        if (product.price && product.discountedPrice && product.discountedPrice < product.price) {
+          discountPercentage = Math.round(((product.price - product.discountedPrice) / product.price) * 100);
+        }
+
+        // Calculate discount for variants if they exist
+        const variantsWithDiscounts = product.variants ? product.variants.map((variant: any) => {
+          let variantDiscountPercentage = 0;
+          if (variant.price && variant.discountedPrice && variant.discountedPrice < variant.price) {
+            variantDiscountPercentage = Math.round(((variant.price - variant.discountedPrice) / variant.price) * 100);
+          }
+          return {
+            ...variant,
+            discountPercentage: variantDiscountPercentage,
+            hasDiscount: variantDiscountPercentage > 0
+          };
+        }) : [];
+
+        return {
+          ...product,
+          discountPercentage,
+          hasDiscount: discountPercentage > 0,
+          variants: variantsWithDiscounts
+        };
+      }) : []
+    };
+
+    return NextResponse.json(processedData);
   } catch (error) {
     console.error('Website Products with Variants API: Error:', error);
     return NextResponse.json(

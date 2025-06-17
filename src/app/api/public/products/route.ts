@@ -33,7 +33,36 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     console.log('Public Products API: Successfully fetched', Array.isArray(data) ? data.length : 0, 'products');
 
-    return NextResponse.json(data);
+    // Add discount calculations to products
+    const productsWithDiscounts = Array.isArray(data) ? data.map((product: any) => {
+      // Calculate discount percentage for main product
+      let discountPercentage = 0;
+      if (product.price && product.discountedPrice && product.discountedPrice < product.price) {
+        discountPercentage = Math.round(((product.price - product.discountedPrice) / product.price) * 100);
+      }
+
+      // Calculate discount for variants if they exist
+      const variantsWithDiscounts = product.variants ? product.variants.map((variant: any) => {
+        let variantDiscountPercentage = 0;
+        if (variant.price && variant.discountedPrice && variant.discountedPrice < variant.price) {
+          variantDiscountPercentage = Math.round(((variant.price - variant.discountedPrice) / variant.price) * 100);
+        }
+        return {
+          ...variant,
+          discountPercentage: variantDiscountPercentage,
+          hasDiscount: variantDiscountPercentage > 0
+        };
+      }) : [];
+
+      return {
+        ...product,
+        discountPercentage,
+        hasDiscount: discountPercentage > 0,
+        variants: variantsWithDiscounts
+      };
+    }) : data;
+
+    return NextResponse.json(productsWithDiscounts);
   } catch (error) {
     console.error('Public Products API: Error:', error);
     // Return empty array instead of error to prevent homepage from breaking
