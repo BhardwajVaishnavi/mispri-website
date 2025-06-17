@@ -4,6 +4,17 @@ import { useState } from 'react';
 import { FiShoppingCart, FiCheck } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
 
+interface ProductVariant {
+  id: string;
+  weight: string;
+  price: number;
+  costPrice?: number;
+  sku?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 interface ProductActionsProps {
   product: {
     id: string;
@@ -11,6 +22,7 @@ interface ProductActionsProps {
     price: number;
     image: string;
     unit?: string;
+    variant?: ProductVariant;
   };
 }
 
@@ -37,6 +49,8 @@ export default function ProductActions({ product }: ProductActionsProps) {
         name: product.name,
         price: product.price,
         image: product.image,
+        variant: product.variant,
+        weight: product.variant?.weight,
       });
     }
 

@@ -7,8 +7,18 @@ import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import ProductActions from '@/components/ProductActions';
 import ProductImageGallery from '@/components/ProductImageGallery';
-
 import SizeSelector from '@/components/SizeSelector';
+
+interface ProductVariant {
+  id: string;
+  weight: string;
+  price: number;
+  costPrice?: number;
+  sku?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
 
 interface Product {
   id: string;
@@ -20,6 +30,7 @@ interface Product {
   sku?: string;
   imageUrl?: string;
   productImages?: Array<{ url: string; isMain?: boolean }>;
+  variants?: ProductVariant[];
 }
 
 export default function ProductPage() {
@@ -29,8 +40,145 @@ export default function ProductPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [categoryInfo, setCategoryInfo] = useState<any>(null);
 
   const productId = params.id as string;
+
+  // Fallback category information when admin panel data is not available
+  const getFallbackCategoryInfo = (category: string) => {
+    const categoryLower = category.toLowerCase();
+
+    // Check for cake-related categories
+    if (categoryLower.includes('cake') || categoryLower.includes('dessert') || categoryLower.includes('sweet')) {
+      return {
+        productContains: [
+          { label: 'Flavour', value: 'Chocolate Truffle' },
+          { label: 'Shape', value: 'Round' },
+          { label: 'Type', value: 'Cream Cake' },
+          { label: 'Toppings', value: 'Dark Chocolate' },
+          { label: 'Net Quantity', value: '1' },
+          { label: 'Ingredients', value: 'Flour, Caster Sugar, Milk, Cocoa Powder, Baking Powder, Baking Soda, Oil, Chocolate, Fresh Cream' },
+          { label: 'Allergens', value: 'Milk, Nuts, Wheat (Gluten)' }
+        ],
+        careInstructions: [
+          'Cream cakes must be refrigerated.',
+          'Fondant cakes should be kept in a cool, air-conditioned space—avoid the fridge.',
+          'Bring the cake to room temperature before serving for best taste.',
+          'Use a serrated knife for clean slices.',
+          'Decorative elements may contain toothpicks or wires—remove before serving, especially to kids.',
+          'Consume the cake within 24 hours for best freshness.',
+          'Always keep the cake flat and away from direct heat.'
+        ],
+        badges: ['EGGLESS', 'FRESH', 'QUALITY', 'FSSAI'],
+        showNameField: true,
+        weightLabel: 'Weight'
+      };
+    }
+
+    // Check for flower-related categories
+    if (categoryLower.includes('flower') || categoryLower.includes('bouquet') || categoryLower.includes('rose') || categoryLower.includes('lily')) {
+      return {
+        productContains: [
+          { label: 'Flower Type', value: 'Fresh Flowers' },
+          { label: 'Color', value: 'Mixed Colors' },
+          { label: 'Arrangement', value: 'Hand Bouquet' },
+          { label: 'Stems Count', value: '12 Stems' },
+          { label: 'Wrapping', value: 'Premium Paper' },
+          { label: 'Includes', value: 'Flower Food Packet' }
+        ],
+        careInstructions: [
+          'Cut stems at 45° angle under running water immediately upon arrival.',
+          'Use clean vase with fresh, cool water.',
+          'Add flower food if provided to extend life.',
+          'Change water every 2-3 days.',
+          'Remove wilted flowers to extend life of remaining blooms.',
+          'Keep away from direct sunlight and heat sources.',
+          'Maintain cool room temperature for maximum freshness.'
+        ],
+        badges: ['FRESH', 'PREMIUM', 'HAND-PICKED'],
+        showNameField: false,
+        weightLabel: 'Size'
+      };
+    }
+
+    // Check for plant-related categories
+    if (categoryLower.includes('plant') || categoryLower.includes('green') || categoryLower.includes('indoor') || categoryLower.includes('garden')) {
+      return {
+        productContains: [
+          { label: 'Plant Type', value: 'Indoor Plant' },
+          { label: 'Pot Material', value: 'Ceramic' },
+          { label: 'Plant Height', value: '15-20 cm' },
+          { label: 'Pot Size', value: '4 inch' },
+          { label: 'Light Requirement', value: 'Bright Indirect Light' },
+          { label: 'Watering', value: 'Moderate' },
+          { label: 'Care Level', value: 'Easy' }
+        ],
+        careInstructions: [
+          'Place in bright, indirect sunlight.',
+          'Water when top inch of soil feels dry.',
+          'Ensure pot has proper drainage holes.',
+          'Fertilize monthly during growing season.',
+          'Maintain temperature between 18-24°C.',
+          'Rotate weekly for even growth.',
+          'Keep away from air conditioning vents.',
+          'Wipe leaves gently with damp cloth to remove dust.'
+        ],
+        badges: ['AIR-PURIFYING', 'LOW-MAINTENANCE', 'INDOOR'],
+        showNameField: false,
+        weightLabel: 'Size'
+      };
+    }
+
+    // Check for gift-related categories
+    if (categoryLower.includes('gift') || categoryLower.includes('present') || categoryLower.includes('hamper') || categoryLower.includes('combo')) {
+      return {
+        productContains: [
+          { label: 'Material', value: 'Premium Quality' },
+          { label: 'Dimensions', value: 'Standard Size' },
+          { label: 'Weight', value: 'As per variant' },
+          { label: 'Color', value: 'As shown' },
+          { label: 'Packaging', value: 'Gift Wrapped' },
+          { label: 'Includes', value: 'Gift Card' }
+        ],
+        careInstructions: [
+          'Handle with care during unpacking.',
+          'Store in cool, dry place.',
+          'Keep away from moisture and humidity.',
+          'Follow any specific instructions provided.',
+          'Clean gently when needed.',
+          'Avoid direct sunlight exposure.',
+          'Store properly when not in use.'
+        ],
+        badges: ['PREMIUM', 'QUALITY', 'GIFT-READY'],
+        showNameField: false,
+        weightLabel: 'Size'
+      };
+    }
+
+    // Default for any other category
+    return {
+      productContains: [
+        { label: 'Product Type', value: category },
+        { label: 'Quality', value: 'Premium' },
+        { label: 'Unit', value: 'piece' },
+        { label: 'Category', value: category },
+        { label: 'Packaging', value: 'Standard' }
+      ],
+      careInstructions: [
+        'Handle with care during unpacking.',
+        'Store in cool, dry place.',
+        'Keep away from moisture and humidity.',
+        'Follow any specific instructions provided.',
+        'Clean gently when needed.',
+        'Avoid direct sunlight exposure.',
+        'Store properly when not in use.'
+      ],
+      badges: ['PREMIUM', 'QUALITY', 'AUTHENTIC'],
+      showNameField: false,
+      weightLabel: 'Size'
+    };
+  };
 
   useEffect(() => {
     if (productId) {
@@ -46,11 +194,12 @@ export default function ProductPage() {
       console.log('ProductPage: Fetching product with ID:', productId);
       console.log('ProductPage: Current URL:', window.location.href);
 
-      // Try multiple API endpoints
+      // Try to fetch from variants API first, then fallback to regular API
       const apiUrls = [
+        `/api/products-with-variants/${productId}`, // Enhanced API with variants
+        `https://mispri24.vercel.app/api/products-with-variants/${productId}`, // Admin variants API
         `/api/products/${productId}`, // Website API
         `https://mispri24.vercel.app/api/public/products/${productId}`, // Admin public API
-        `https://mispri24.vercel.app/api/products/${productId}` // Admin direct API
       ];
 
       let productData = null;
@@ -83,10 +232,39 @@ export default function ProductPage() {
         return;
       }
 
+      console.log('📦 Product data loaded:', {
+        id: productData.id,
+        name: productData.name,
+        price: productData.price,
+        variantsCount: productData.variants?.length || 0,
+        variants: productData.variants?.map((v: any) => ({
+          id: v.id,
+          weight: v.weight,
+          price: v.price,
+          isDefault: v.isDefault,
+          isActive: v.isActive
+        })) || []
+      });
+
       setProduct(productData);
 
-      // Fetch related products
+      // Set default variant if variants exist
+      if (productData.variants && productData.variants.length > 0) {
+        const defaultVariant = productData.variants.find((v: ProductVariant) => v.isDefault) || productData.variants[0];
+        console.log('🎯 Setting default variant:', {
+          id: defaultVariant.id,
+          weight: defaultVariant.weight,
+          price: defaultVariant.price,
+          isDefault: defaultVariant.isDefault
+        });
+        setSelectedVariant(defaultVariant);
+      } else {
+        console.log('⚠️ No variants found, using product base price:', productData.price);
+      }
+
+      // Fetch category-specific information
       if (productData.category) {
+        fetchCategoryInfo(productData.category);
         fetchRelatedProducts(productData.category, productData.id);
       }
     } catch (err) {
@@ -94,6 +272,39 @@ export default function ProductPage() {
       setError(err instanceof Error ? err.message : 'Failed to load product');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategoryInfo = async (category: string) => {
+    try {
+      // Try to fetch from admin panel first, then fallback to default
+      const apiUrls = [
+        `https://mispri24.vercel.app/api/product-category-info?category=${encodeURIComponent(category)}`,
+        `/api/product-category-info?category=${encodeURIComponent(category)}`
+      ];
+
+      let categoryData = null;
+      for (const apiUrl of apiUrls) {
+        try {
+          const response = await fetch(apiUrl);
+          if (response.ok) {
+            categoryData = await response.json();
+            break;
+          }
+        } catch (fetchError) {
+          console.log('Category info API failed:', apiUrl);
+        }
+      }
+
+      if (categoryData) {
+        setCategoryInfo(categoryData);
+      } else {
+        // Use fallback category info
+        setCategoryInfo(getFallbackCategoryInfo(category));
+      }
+    } catch (err) {
+      console.error('Error fetching category info:', err);
+      setCategoryInfo(getFallbackCategoryInfo(category));
     }
   };
 
@@ -160,12 +371,42 @@ export default function ProductPage() {
     ? product.productImages
     : [{ url: product.imageUrl || `https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&h=600&fit=crop`, isMain: true }];
 
-  // Prepare size options
-  const sizeOptions = [
-    { id: 'small', name: 'Small', description: '500g', priceModifier: 0 },
-    { id: 'medium', name: 'Medium', description: '1kg', priceModifier: 100 },
-    { id: 'large', name: 'Large', description: '1.5kg', priceModifier: 200 }
-  ];
+  // Prepare size options from variants or use default
+  const sizeOptions = product.variants && product.variants.length > 0
+    ? product.variants
+        .filter(variant => variant.isActive) // Only show active variants
+        .sort((a, b) => a.sortOrder - b.sortOrder) // Sort by sortOrder
+        .map(variant => ({
+          id: variant.id,
+          name: variant.weight.split(' ')[0], // Extract number part (e.g., "0.5" from "0.5 Kg")
+          description: variant.weight, // Full weight description (e.g., "0.5 Kg")
+          price: variant.price, // Use actual variant price
+          priceModifier: 0 // Not needed since we're showing actual prices
+        }))
+    : [
+        { id: 'small', name: 'Small', description: '500g', price: product.price || 595, priceModifier: 0 },
+        { id: 'medium', name: 'Medium', description: '1kg', price: (product.price || 595) + 450, priceModifier: 450 },
+        { id: 'large', name: 'Large', description: '1.5kg', price: (product.price || 595) + 950, priceModifier: 950 }
+      ];
+
+  console.log('🎛️ Size options prepared:', {
+    hasVariants: !!(product.variants && product.variants.length > 0),
+    variantsCount: product.variants?.length || 0,
+    sizeOptionsCount: sizeOptions.length,
+    sizeOptions: sizeOptions.map(opt => ({
+      id: opt.id,
+      description: opt.description,
+      price: opt.price
+    }))
+  });
+
+  // Get current price based on selected variant
+  const currentPrice = selectedVariant?.price || product.price;
+
+
+
+  // Use categoryInfo from state, fallback to default if not loaded
+  const currentCategoryInfo = categoryInfo || getFallbackCategoryInfo(product.category);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,31 +437,38 @@ export default function ProductPage() {
 
           {/* Product Information */}
           <div className="order-2 space-y-4 lg:space-y-6">
+            {/* Badges */}
+            <div className="flex flex-wrap gap-2">
+              {currentCategoryInfo.badges.map((badge, index) => (
+                <span key={index} className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  {badge}
+                </span>
+              ))}
+            </div>
+
             {/* Header */}
             <div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mb-3">
-                <span className="text-sm text-primary-600 font-medium bg-primary-50 px-2 py-1 rounded mb-2 sm:mb-0 w-fit">
-                  {product.category}
-                </span>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight">{product.name}</h1>
+
+              <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center space-x-1">
                   <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-current" viewBox="0 0 20 20">
+                      <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     ))}
                   </div>
-                  <span className="text-xs sm:text-sm text-gray-600">(4.8) 124 reviews</span>
+                  <span className="text-sm font-semibold text-gray-900">4.9</span>
                 </div>
+                <span className="text-sm text-gray-600">124 Reviews</span>
               </div>
 
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-3 leading-tight">{product.name}</h1>
-
               <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-3 space-y-2 sm:space-y-0">
-                <span className="text-xl sm:text-2xl font-semibold text-gray-900">₹{product.price.toFixed(2)}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{currentPrice.toFixed(0)}</span>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500 line-through">₹{(product.price * 1.2).toFixed(2)}</span>
-                  <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded">
+                  <span className="text-lg text-gray-500 line-through">₹{(currentPrice * 1.2).toFixed(0)}</span>
+                  <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
                     17% OFF
                   </span>
                 </div>
@@ -242,11 +490,41 @@ export default function ProductPage() {
               </p>
             </div>
 
-            {/* Size/Variant Options */}
-            <SizeSelector
-              sizes={sizeOptions}
-              onSizeChange={(size) => console.log('Size changed:', size)}
-            />
+            {/* Weight/Size Selection */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{currentCategoryInfo.weightLabel}</h3>
+              <SizeSelector
+                sizes={sizeOptions}
+                selectedSize={selectedVariant?.id}
+                onSizeChange={(size) => {
+                  console.log('Size changed:', size);
+                  // Find the corresponding variant
+                  if (product.variants && product.variants.length > 0) {
+                    const variant = product.variants.find(v => v.id === size.id);
+                    if (variant) {
+                      setSelectedVariant(variant);
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">Serving Info</p>
+            </div>
+
+            {/* Name on Product - Dynamic based on category */}
+            {currentCategoryInfo.showNameField && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  {product.category.toLowerCase().includes('cake') ? 'Name on Cake' : `Name on ${product.category}`}
+                </h3>
+                <input
+                  type="text"
+                  placeholder={`Enter name for ${product.category.toLowerCase()} (optional)`}
+                  maxLength={25}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F9EA0] focus:border-transparent text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">0 / 25</p>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="space-y-4 lg:space-y-6">
@@ -256,9 +534,10 @@ export default function ProductPage() {
                   product={{
                     id: product.id,
                     name: product.name,
-                    price: product.price,
+                    price: currentPrice,
                     image: galleryImages[0]?.url || product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`,
-                    unit: product.unit
+                    unit: product.unit,
+                    variant: selectedVariant
                   }}
                 />
               </div>
@@ -283,215 +562,89 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Product Information Section - Full Width */}
-        <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-8 lg:mb-16">
-          <div className="text-center mb-6 lg:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 lg:mb-4">Product Information</h2>
-            <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about this product
-            </p>
+        {/* Product Contains Section */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Contains</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {currentCategoryInfo.productContains.map((item, index) => (
+              <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                <span className="text-sm font-medium text-gray-700">{item.label}:</span>
+                <span className="text-sm text-gray-900">{item.value}</span>
+              </div>
+            ))}
+            {/* Add SKU from product data */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+              <span className="text-sm font-medium text-gray-700">SKU:</span>
+              <span className="text-sm text-gray-900">{product.sku || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Description Section */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
+          <p className="text-gray-700 leading-relaxed">
+            {product.description ||
+              (product.category === 'Cakes' ?
+                `This round cream cake is full of chocolate sponge and chocolate cream. It's perfect for every celebration like a birthday or anniversary, and everyone can enjoy it as it comes in an eggless only. This is one of the best selling cake and most loved product on our platform.` :
+                product.category === 'Flowers' ?
+                `Beautiful ${product.name} arrangement featuring fresh, vibrant blooms. Perfect for expressing your feelings and brightening any occasion with natural beauty and fragrance.` :
+                product.category === 'Plants' ?
+                `Healthy ${product.name} plant that brings natural beauty to your space. Easy to care for and perfect for home or office decoration with air-purifying qualities.` :
+                `Premium quality ${product.name} crafted with care and attention to detail. Perfect for special occasions and everyday enjoyment.`)
+            }
+          </p>
+        </div>
+
+        {/* Care Instructions Section */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Care Instructions</h2>
+          <ul className="space-y-2">
+            {currentCategoryInfo.careInstructions.map((instruction, index) => (
+              <li key={index} className="flex items-start space-x-2">
+                <span className="text-green-500 mt-1">•</span>
+                <span className="text-gray-700 text-sm">{instruction}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* SKU and Additional Info */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">SKU Number</h3>
+          <p className="text-gray-700 font-mono">{product.sku || 'N/A'}</p>
+
+          <div className="flex items-center space-x-4 mt-6">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="text-sm text-gray-700">Fresh</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-sm text-gray-700">Quality</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <span className="text-sm text-gray-700">Certified</span>
+            </div>
           </div>
 
-          {/* Information Grid - Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {/* Description */}
-            <div className="bg-blue-50 rounded-lg p-4 sm:p-6">
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Description</h4>
-              <div className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  {product.description ||
-                    (product.category === 'Cakes' ? `Freshly baked ${product.name} using premium ingredients. Made to order for maximum freshness and quality.` :
-                     product.category === 'Flowers' ? `Beautiful ${product.name} arrangement with hand-selected fresh blooms sourced from finest growers.` :
-                     product.category === 'Plants' ? `Healthy ${product.name} plant grown in optimal conditions with proper care instructions.` :
-                     `Premium quality ${product.name} crafted with care and attention to detail.`)
-                  }
-                </p>
-                <div className="space-y-1 sm:space-y-2">
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="font-medium text-gray-900">SKU:</span>
-                    <span className="ml-2 text-gray-600">{product.sku || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="font-medium text-gray-900">Category:</span>
-                    <span className="ml-2 bg-primary-100 text-primary-800 px-1 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm">
-                      {product.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="font-medium text-gray-900">Unit:</span>
-                    <span className="ml-2 text-gray-600">{product.unit}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="bg-yellow-50 rounded-lg p-4 sm:p-6">
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Reviews</h4>
-              <div className="text-xs sm:text-sm text-gray-700">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-3 h-3 sm:w-5 sm:h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm sm:text-lg font-semibold text-gray-900">4.8</span>
-                  <span className="ml-2 text-xs sm:text-sm text-gray-600">(124 reviews)</span>
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="border-l-4 border-green-200 pl-2 sm:pl-3">
-                    <p className="text-xs sm:text-sm font-medium">"Excellent quality and fresh delivery!"</p>
-                    <p className="text-xs text-gray-500 mt-1">- Priya S.</p>
-                  </div>
-                  <div className="border-l-4 border-blue-200 pl-2 sm:pl-3">
-                    <p className="text-xs sm:text-sm font-medium">"Perfect for our anniversary celebration."</p>
-                    <p className="text-xs text-gray-500 mt-1">- Raj M.</p>
-                  </div>
-                  <div className="border-l-4 border-purple-200 pl-2 sm:pl-3">
-                    <p className="text-xs sm:text-sm font-medium">"Beautiful presentation and taste!"</p>
-                    <p className="text-xs text-gray-500 mt-1">- Anita K.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Info */}
-            <div className="bg-green-50 rounded-lg p-4 sm:p-6">
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Delivery Info</h4>
-              <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg">
-                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 text-xs sm:text-sm">Free Delivery</div>
-                    <div className="text-gray-600 text-xs">Within Bhubaneswar</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
-                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 text-xs sm:text-sm">Same Day Delivery</div>
-                    <div className="text-gray-600 text-xs">Order before 2 PM</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className="bg-purple-100 p-1.5 sm:p-2 rounded-lg">
-                    <svg className="w-3 h-3 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 text-xs sm:text-sm">Quality Guarantee</div>
-                    <div className="text-gray-600 text-xs">100% Fresh</div>
-                  </div>
-                </div>
-                <div className="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4 p-2 sm:p-3 bg-white rounded-lg">
-                  <span className="font-semibold">Special Handling:</span> {
-                    product.category === 'Cakes' ? 'Temperature controlled delivery to maintain freshness' :
-                    product.category === 'Flowers' ? 'Fresh and hydrated packaging for maximum bloom life' :
-                    'Secure and safe packaging with care instructions'
-                  }
-                </div>
-              </div>
-            </div>
-
-            {/* Care Instructions */}
-            <div className="bg-purple-50 rounded-lg p-4 sm:p-6">
-              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Care Instructions</h4>
-              <div className="text-xs sm:text-sm text-gray-700">
-                {product.category === 'Cakes' ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Storage:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Keep refrigerated at 2-4°C</li>
-                        <li>Consume within 2-3 days</li>
-                        <li>Bring to room temperature before serving</li>
-                        <li>Store in original packaging</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Serving:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Use clean knife for cutting</li>
-                        <li>Serve at room temperature for best taste</li>
-                        <li>Cut into portions as needed</li>
-                      </ul>
-                    </div>
-                  </div>
-                ) : product.category === 'Flowers' ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Freshness Tips:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Cut stems at 45° angle under running water</li>
-                        <li>Use clean vase with fresh, cool water</li>
-                        <li>Add flower food if provided</li>
-                        <li>Change water every 2-3 days</li>
-                        <li>Remove wilted flowers to extend life</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Placement:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Keep away from direct sunlight</li>
-                        <li>Avoid heat sources and drafts</li>
-                        <li>Maintain cool room temperature</li>
-                      </ul>
-                    </div>
-                  </div>
-                ) : product.category === 'Plants' ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Plant Care:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Place in bright, indirect sunlight</li>
-                        <li>Water when top inch of soil feels dry</li>
-                        <li>Ensure pot has proper drainage holes</li>
-                        <li>Fertilize monthly during growing season</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Environment:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Maintain temperature between 18-24°C</li>
-                        <li>Rotate weekly for even growth</li>
-                        <li>Keep away from air conditioning vents</li>
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">General Care:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Handle with care during unpacking</li>
-                        <li>Store in cool, dry place</li>
-                        <li>Keep away from moisture and humidity</li>
-                        <li>Follow any specific instructions provided</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm">Maintenance:</p>
-                      <ul className="list-disc list-inside space-y-0.5 sm:space-y-1 ml-1 sm:ml-2 text-xs sm:text-sm">
-                        <li>Clean gently when needed</li>
-                        <li>Avoid direct sunlight exposure</li>
-                        <li>Store properly when not in use</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold">Note:</span> The icing, design of the cake may vary from the image depending upon local availability.
+            </p>
           </div>
         </div>
 

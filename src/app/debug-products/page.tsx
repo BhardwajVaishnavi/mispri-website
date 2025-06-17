@@ -24,18 +24,18 @@ export default function DebugProductsPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('Fetching products from API...');
       const response = await fetch('/api/products');
       console.log('API Response status:', response.status);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Products data:', data);
-      
+
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching products:', err);
@@ -50,7 +50,7 @@ export default function DebugProductsPage() {
       console.log(`Testing product detail for ID: ${productId}`);
       const response = await fetch(`/api/products/${productId}`);
       console.log('Product detail response status:', response.status);
-      
+
       if (response.ok) {
         const product = await response.json();
         console.log('Product detail data:', product);
@@ -99,7 +99,7 @@ export default function DebugProductsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Debug: Products API Test</h1>
-      
+
       <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h2 className="text-blue-800 font-semibold mb-2">API Status</h2>
         <p className="text-blue-700">✅ Products API is working</p>
@@ -122,7 +122,7 @@ export default function DebugProductsPage() {
               <p className="text-sm text-gray-500">{product.category}</p>
               <p className="text-xs text-gray-400 font-mono">ID: {product.id}</p>
             </div>
-            
+
             <div className="space-y-2">
               <Link
                 href={`/product/${product.id}`}
@@ -130,7 +130,7 @@ export default function DebugProductsPage() {
               >
                 View Product Page
               </Link>
-              
+
               <button
                 onClick={() => testProductDetail(product.id)}
                 className="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition-colors"
@@ -158,7 +158,7 @@ export default function DebugProductsPage() {
         <h2 className="font-semibold mb-2">Debug Information</h2>
         <div className="text-sm text-gray-600 space-y-1">
           <p>• API Base URL: {process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}</p>
-          <p>• Current URL: {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</p>
+          <p>• Current URL: {typeof window !== 'undefined' ? window.location.href : 'Loading...'}</p>
           <p>• Products loaded: {products.length}</p>
           <p>• Check browser console for detailed logs</p>
         </div>

@@ -2,20 +2,34 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export interface ProductVariant {
+  id: string;
+  weight: string;
+  price: number;
+  costPrice: number;
+  sku: string;
+  isDefault: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   image: string;
+  variant?: ProductVariant;
+  weight?: string;
+  variantId?: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
   cartCount: number;
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeFromCart: (id: string, variantId?: string) => void;
+  updateQuantity: (id: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
 }
 
@@ -89,6 +103,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           body: JSON.stringify({
             userId: user.id,
             productId: item.id,
+            variantId: item.variantId,
             quantity: 1,
           }),
         });
@@ -101,9 +116,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const cartItems = cart.items?.map((cartItem: any) => ({
               id: cartItem.product.id,
               name: cartItem.product.name,
-              price: cartItem.product.price,
+              price: cartItem.variant?.price || cartItem.product.price,
               quantity: cartItem.quantity,
-              image: cartItem.product.imageUrl || '/images/placeholder.jpg'
+              image: cartItem.product.imageUrl || '/images/placeholder.jpg',
+              variant: cartItem.variant,
+              weight: cartItem.variant?.weight,
+              variantId: cartItem.variant?.id,
             })) || [];
             setCartItems(cartItems);
             return;
@@ -116,8 +134,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Fallback to local state update
     setCartItems(prevItems => {
-      // Check if item already exists in cart
-      const existingItemIndex = prevItems.findIndex(cartItem => cartItem.id === item.id);
+      // Check if item already exists in cart (considering variant)
+      const existingItemIndex = prevItems.findIndex(cartItem =>
+        cartItem.id === item.id && cartItem.variantId === item.variantId
+      );
 
       if (existingItemIndex >= 0) {
         // Item exists, update quantity
@@ -134,16 +154,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  const removeFromCart = (id: string, variantId?: string) => {
+    setCartItems(prevItems =>
+      prevItems.filter(item =>
+        !(item.id === id && (variantId ? item.variantId === variantId : true))
+      )
+    );
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number, variantId?: string) => {
     if (quantity < 1) return;
 
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
+        item.id === id && (variantId ? item.variantId === variantId : true)
+          ? { ...item, quantity }
+          : item
       )
     );
   };
