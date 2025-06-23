@@ -6,7 +6,7 @@
   "framework": "nextjs",
   "regions": ["bom1"],
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://mispri24-mxjj8yuce-bhardwajvaishnavis-projects.vercel.app/api"
+    "NEXT_PUBLIC_API_URL": "https://mispri24.vercel.app/api"
   },
   "headers": [
     {

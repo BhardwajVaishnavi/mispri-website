@@ -13,6 +13,9 @@ type ProductCardProps = {
     name: string;
     description: string | null;
     price: number;
+    discountedPrice?: number;
+    discountPercentage?: number;
+    hasDiscount?: boolean;
     imageUrl: string | null;
     category: string;
     productImages?: {
@@ -39,10 +42,11 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
     e.preventDefault();
     e.stopPropagation();
 
+    const finalPrice = product.discountedPrice && product.hasDiscount ? product.discountedPrice : product.price;
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: finalPrice,
       image: imageUrl,
     });
 
@@ -60,10 +64,11 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
       if (isInWishlist(product.id)) {
         await removeFromWishlist(product.id);
       } else {
+        const finalPrice = product.discountedPrice && product.hasDiscount ? product.discountedPrice : product.price;
         await addToWishlist({
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: finalPrice,
           image: imageUrl,
           category: product.category,
           inStock: true, // Assume in stock for now
@@ -157,7 +162,21 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
 
         {/* Price */}
         <div className="flex justify-between items-center">
-          <p className="font-bold text-gray-900">₹{product.price.toFixed(2)}</p>
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2">
+              <p className="font-bold text-gray-900">
+                ₹{(product.discountedPrice && product.hasDiscount ? product.discountedPrice : product.price).toFixed(2)}
+              </p>
+              {product.hasDiscount && product.discountedPrice && product.discountPercentage && (
+                <span className="bg-red-100 text-red-800 text-xs font-medium px-1.5 py-0.5 rounded">
+                  {product.discountPercentage}% OFF
+                </span>
+              )}
+            </div>
+            {product.hasDiscount && product.discountedPrice && (
+              <p className="text-sm text-gray-500 line-through">₹{product.price.toFixed(2)}</p>
+            )}
+          </div>
 
           {/* Add to Cart Button - Visible on Mobile */}
           <button

@@ -15,6 +15,9 @@ interface Product {
   description?: string;
   category: string;
   price: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  hasDiscount?: boolean;
   unit: string;
   sku?: string;
   imageUrl?: string;
@@ -187,11 +190,17 @@ export default function ClientProductPage() {
               <h1 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-3">{product.name}</h1>
 
               <div className="flex items-baseline space-x-3">
-                <span className="text-xl font-semibold text-gray-900">₹{product.price.toFixed(2)}</span>
-                <span className="text-sm text-gray-500 line-through">₹{(product.price * 1.2).toFixed(2)}</span>
-                <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded">
-                  17% OFF
+                <span className="text-xl font-semibold text-gray-900">
+                  ₹{(product.discountedPrice && product.hasDiscount ? product.discountedPrice : product.price).toFixed(2)}
                 </span>
+                {product.hasDiscount && product.discountedPrice && product.discountPercentage && (
+                  <>
+                    <span className="text-sm text-gray-500 line-through">₹{product.price.toFixed(2)}</span>
+                    <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded">
+                      {product.discountPercentage}% OFF
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 

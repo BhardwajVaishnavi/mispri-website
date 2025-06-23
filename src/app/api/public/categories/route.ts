@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Forward the request to the main admin API
+    // Forward the request to the admin panel's public categories API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
-    const apiUrl = `${API_BASE_URL}/categories`;
+    const apiUrl = `${API_BASE_URL}/public/categories`;
 
     console.log('Public Categories API: Forwarding to:', apiUrl);
 

@@ -35,6 +35,9 @@ export interface Product {
   description?: string;
   category: string;
   price: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  hasDiscount?: boolean;
   costPrice: number;
   unit: string;
   imageUrl?: string;

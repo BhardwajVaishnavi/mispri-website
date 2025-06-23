@@ -13,6 +13,9 @@ interface ProductVariant {
   id: string;
   weight: string;
   price: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  hasDiscount?: boolean;
   costPrice?: number;
   sku?: string;
   isDefault: boolean;
@@ -26,6 +29,9 @@ interface Product {
   description?: string;
   category: string;
   price: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  hasDiscount?: boolean;
   unit: string;
   sku?: string;
   imageUrl?: string;
@@ -400,8 +406,15 @@ export default function ProductPage() {
     }))
   });
 
-  // Get current price based on selected variant
+  // Get current price and discount based on selected variant
   const currentPrice = selectedVariant?.price || product.price;
+  const currentDiscountedPrice = selectedVariant?.discountedPrice || product.discountedPrice;
+  const currentDiscountPercentage = selectedVariant?.discountPercentage || product.discountPercentage;
+  const currentHasDiscount = selectedVariant?.hasDiscount || product.hasDiscount;
+
+  // Calculate original price if discounted price exists
+  const originalPrice = currentDiscountedPrice && currentHasDiscount ? currentPrice : null;
+  const displayPrice = currentDiscountedPrice && currentHasDiscount ? currentDiscountedPrice : currentPrice;
 
 
 
@@ -465,13 +478,15 @@ export default function ProductPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-3 space-y-2 sm:space-y-0">
-                <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{currentPrice.toFixed(0)}</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg text-gray-500 line-through">₹{(currentPrice * 1.2).toFixed(0)}</span>
-                  <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
-                    17% OFF
-                  </span>
-                </div>
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{displayPrice.toFixed(0)}</span>
+                {currentHasDiscount && originalPrice && currentDiscountPercentage && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg text-gray-500 line-through">₹{originalPrice.toFixed(0)}</span>
+                    <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
+                      {currentDiscountPercentage}% OFF
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -534,7 +549,7 @@ export default function ProductPage() {
                   product={{
                     id: product.id,
                     name: product.name,
-                    price: currentPrice,
+                    price: displayPrice,
                     image: galleryImages[0]?.url || product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`,
                     unit: product.unit,
                     variant: selectedVariant
