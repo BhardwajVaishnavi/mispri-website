@@ -39,7 +39,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push('/');
       return;
     }
 
@@ -236,7 +236,7 @@ export default function OrdersPage() {
                   
                   <div className="flex space-x-3">
                     <Link
-                      href={`/order-success?orderNumber=${order.orderNumber || order.id}`}
+                      href={`/order-details/${order.orderNumber || order.id}`}
                       className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
                     >
                       <FiEye size={16} />

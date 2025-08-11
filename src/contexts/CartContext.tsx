@@ -6,8 +6,8 @@ export interface ProductVariant {
   id: string;
   weight: string;
   price: number;
-  costPrice: number;
-  sku: string;
+  costPrice?: number;
+  sku?: string;
   isDefault: boolean;
   isActive: boolean;
   sortOrder: number;
@@ -22,6 +22,7 @@ export interface CartItem {
   variant?: ProductVariant;
   weight?: string;
   variantId?: string;
+  customName?: string | null;
 }
 
 interface CartContextType {
@@ -47,8 +48,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData) {
         try {
           const user = JSON.parse(userData);
-          // Load cart from backend
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/cart?userId=${user.id}`);
+          // Load cart from backend via local API
+          const response = await fetch(`/api/cart?userId=${user.id}`);
           if (response.ok) {
             const cart = await response.json();
             const cartItems = cart.items?.map((item: any) => ({
@@ -95,7 +96,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/cart`, {
+        const response = await fetch('/api/cart', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -110,7 +111,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (response.ok) {
           // Reload cart from backend
-          const cartResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/cart?userId=${user.id}`);
+          const cartResponse = await fetch(`/api/cart?userId=${user.id}`);
           if (cartResponse.ok) {
             const cart = await cartResponse.json();
             const cartItems = cart.items?.map((cartItem: any) => ({
@@ -122,6 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               variant: cartItem.variant,
               weight: cartItem.variant?.weight,
               variantId: cartItem.variant?.id,
+              customName: cartItem.customName || null,
             })) || [];
             setCartItems(cartItems);
             return;

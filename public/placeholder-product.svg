@@ -1,0 +1,8 @@
+<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#5F9EA0"/>
+  <text x="150" y="140" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle">MISPRI</text>
+  <text x="150" y="165" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle">Product Image</text>
+  <rect x="120" y="180" width="60" height="40" fill="none" stroke="white" stroke-width="2" rx="5"/>
+  <circle cx="135" cy="190" r="3" fill="white"/>
+  <polygon points="145,210 155,200 165,210 165,215 145,215" fill="white"/>
+</svg>

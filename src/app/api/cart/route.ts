@@ -16,10 +16,73 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Forward the request to the admin panel API
-    const API_BASE_URL = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3002/api'  // Local admin panel
-      : (process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'); // Production admin panel
+    console.log('🛒 Website API: Fetching cart for user:', userId);
+
+    // Check if we're in development mode and should use local processing
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
+
+    if (isDevelopment && process.env.DATABASE_URL) {
+      console.log('🔄 Development mode: Fetching cart locally');
+
+      try {
+        // Import Prisma client for local processing
+        const { PrismaClient } = require('@prisma/client');
+
+        const prisma = new PrismaClient({
+          datasources: {
+            db: {
+              url: process.env.DATABASE_URL
+            }
+          }
+        });
+
+        // Find cart for this user
+        console.log('🔍 Looking for cart with userId:', userId);
+        const cart = await prisma.cart.findUnique({
+          where: { userId },
+          include: {
+            items: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    imageUrl: true,
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        console.log('📋 Cart found:', cart ? `Cart with ${cart.items.length} items` : 'No cart found');
+        await prisma.$disconnect();
+
+        if (!cart) {
+          console.log('❌ Cart not found for user:', userId);
+          return NextResponse.json({ items: [] });
+        }
+
+        console.log(`✅ Found cart with ${cart.items.length} items locally`);
+        return NextResponse.json(cart);
+
+      } catch (localError) {
+        console.error('❌ Local cart fetch failed:', localError);
+        console.log('🔄 Falling back to admin panel API due to local error');
+
+        // Ensure Prisma is disconnected even on error
+        try {
+          await prisma.$disconnect();
+        } catch (disconnectError) {
+          console.error('❌ Error disconnecting Prisma:', disconnectError);
+        }
+      }
+    }
+
+    // Forward to admin panel API (production or fallback)
+    console.log('🔄 Forwarding to admin panel API:', API_BASE_URL);
 
     const response = await fetch(`${API_BASE_URL}/cart?userId=${userId}`, {
       method: 'GET',
@@ -37,6 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     const cart = await response.json();
+    console.log(`🛒 Cart fetched from admin API`);
     return NextResponse.json(cart);
   } catch (error) {
     console.error('Error fetching cart:', error);

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FiMail, FiLock, FiUser, FiPhone, FiEye, FiEyeOff } from 'react-icons/fi';
-import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
+import { signIn } from 'next-auth/react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginFormProps {
@@ -24,6 +25,33 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
     const success = await login(email, password);
     if (success && onSuccess) {
       onSuccess();
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      console.log('🔄 Starting Google login...');
+
+      // Use NextAuth to sign in with Google
+      const result = await signIn('google', {
+        callbackUrl: '/',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        console.error('❌ Google login error:', result.error);
+        // Handle error through the auth context
+        return;
+      }
+
+      console.log('✅ Google login initiated');
+
+      // If successful and onSuccess callback exists, call it
+      if (result?.ok && onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('❌ Google login error:', error);
     }
   };
 
@@ -115,20 +143,14 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
         <div className="bg-white px-3 relative text-sm text-gray-500">or continue with</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="w-full">
         <button
           type="button"
-          className="flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+          onClick={handleGoogleLogin}
+          className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <FaGoogle className="text-red-600 mr-2" />
-          Google
-        </button>
-        <button
-          type="button"
-          className="flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <FaFacebook className="text-blue-600 mr-2" />
-          Facebook
+          Continue with Google
         </button>
       </div>
 
@@ -187,6 +209,32 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
     const success = await register(name, email, password, phone);
     if (success && onSuccess) {
       onSuccess();
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      console.log('🔄 Starting Google registration/login...');
+
+      // Use NextAuth to sign in with Google
+      const result = await signIn('google', {
+        callbackUrl: '/',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        console.error('❌ Google login error:', result.error);
+        return;
+      }
+
+      console.log('✅ Google login initiated');
+
+      // If successful and onSuccess callback exists, call it
+      if (result?.ok && onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('❌ Google login error:', error);
     }
   };
 
@@ -341,6 +389,22 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       >
         {isLoading ? 'Creating Account...' : 'Create Account'}
       </button>
+
+      <div className="relative flex items-center justify-center mt-6">
+        <div className="border-t border-gray-300 absolute w-full"></div>
+        <div className="bg-white px-3 relative text-sm text-gray-500">or continue with</div>
+      </div>
+
+      <div className="w-full">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <FaGoogle className="text-red-600 mr-2" />
+          Continue with Google
+        </button>
+      </div>
 
       <div className="text-center mt-4">
         <p className="text-sm text-gray-600">

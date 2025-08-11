@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { FiShoppingCart, FiCheck } from 'react-icons/fi';
+import { FiShoppingCart, FiCheck, FiZap } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProductVariant {
   id: string;
@@ -24,12 +26,15 @@ interface ProductActionsProps {
     unit?: string;
     variant?: ProductVariant;
   };
+  customName?: string;
 }
 
-export default function ProductActions({ product }: ProductActionsProps) {
+export default function ProductActions({ product, customName = '' }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
@@ -51,12 +56,44 @@ export default function ProductActions({ product }: ProductActionsProps) {
         image: product.image,
         variant: product.variant,
         weight: product.variant?.weight,
+        variantId: product.variant?.id,
+        customName: customName.trim() || null,
       });
     }
 
     // Show added to cart feedback
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!isAuthenticated) {
+      // Redirect to login or show login modal
+      alert('Please login to continue with purchase');
+      return;
+    }
+
+    // Store the buy now item in localStorage for checkout
+    const buyNowItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      variant: product.variant,
+      weight: product.variant?.weight,
+      variantId: product.variant?.id,
+      quantity: quantity,
+      customName: customName.trim() || null,
+    };
+
+    console.log('🛒 Storing Buy Now item:', buyNowItem);
+    localStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
+
+    // Small delay to ensure localStorage is written
+    setTimeout(() => {
+      console.log('🚀 Navigating to checkout...');
+      router.push('/checkout?buyNow=true');
+    }, 100);
   };
 
   return (
@@ -101,27 +138,43 @@ export default function ProductActions({ product }: ProductActionsProps) {
         <span className="text-xs sm:text-sm text-gray-600">({product.unit || 'piece'})</span>
       </div>
 
-      {/* Add to Cart Button */}
-      <button
-        className={`w-full ${
-          addedToCart ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'
-        } text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center transition-colors shadow-sm text-sm sm:text-base`}
-        onClick={handleAddToCart}
-      >
-        {addedToCart ? (
-          <>
-            <FiCheck className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Added to Cart</span>
-            <span className="sm:hidden">Added</span>
-          </>
-        ) : (
-          <>
-            <FiShoppingCart className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Add to Cart</span>
-            <span className="sm:hidden">Add to Cart</span>
-          </>
-        )}
-      </button>
+      {/* Action Buttons Section */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-gray-900">Add to Cart & Purchase</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Add to Cart Button */}
+          <button
+            className={`w-full ${
+              addedToCart ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'
+            } text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center transition-colors shadow-sm text-sm sm:text-base`}
+            onClick={handleAddToCart}
+          >
+            {addedToCart ? (
+              <>
+                <FiCheck className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Added to Cart</span>
+                <span className="sm:hidden">Added</span>
+              </>
+            ) : (
+              <>
+                <FiShoppingCart className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Add to Cart</span>
+                <span className="sm:hidden">Add to Cart</span>
+              </>
+            )}
+          </button>
+
+          {/* Buy Now Button */}
+          <button
+            className="w-full bg-[#5F9EA0] hover:bg-[#5F9EA0]/90 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg flex items-center justify-center transition-colors shadow-sm text-sm sm:text-base"
+            onClick={handleBuyNow}
+          >
+            <FiZap className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Buy Now</span>
+            <span className="sm:hidden">Buy Now</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

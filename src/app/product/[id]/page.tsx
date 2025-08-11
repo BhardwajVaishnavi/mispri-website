@@ -48,6 +48,7 @@ export default function ProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [categoryInfo, setCategoryInfo] = useState<any>(null);
+  const [customName, setCustomName] = useState('');
 
   const productId = params.id as string;
 
@@ -533,18 +534,19 @@ export default function ProductPage() {
                 </h3>
                 <input
                   type="text"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
                   placeholder={`Enter name for ${product.category.toLowerCase()} (optional)`}
                   maxLength={25}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F9EA0] focus:border-transparent text-sm"
                 />
-                <p className="text-xs text-gray-500 mt-1">0 / 25</p>
+                <p className="text-xs text-gray-500 mt-1">{customName.length} / 25</p>
               </div>
             )}
 
             {/* Action Buttons */}
             <div className="space-y-4 lg:space-y-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3 lg:mb-4">Quantity & Add to Cart</h3>
                 <ProductActions
                   product={{
                     id: product.id,
@@ -554,6 +556,7 @@ export default function ProductPage() {
                     unit: product.unit,
                     variant: selectedVariant
                   }}
+                  customName={customName}
                 />
               </div>
 

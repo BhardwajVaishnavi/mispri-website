@@ -1,19 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FiCreditCard, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAllCityNames, isValidOdishaPostalCode, getCityByPostalCode } from '@/data/odisha-cities';
+import CouponSection from '@/components/cart/CouponSection';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [orderComplete, setOrderComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [buyNowItem, setBuyNowItem] = useState(null);
+  const [buyNowLoaded, setBuyNowLoaded] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,21 +26,49 @@ export default function CheckoutPage() {
     phone: '',
     address: '',
     city: '',
-    state: '',
+    state: 'Odisha',
     postalCode: '',
     country: 'India',
   });
 
+  const [postalCodeError, setPostalCodeError] = useState('');
+
   const { cartItems, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Redirect if not authenticated
+  // Handle Buy Now functionality
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
+    const isBuyNow = searchParams.get('buyNow') === 'true';
+    if (isBuyNow) {
+      const storedItem = localStorage.getItem('buyNowItem');
+      if (storedItem) {
+        try {
+          const item = JSON.parse(storedItem);
+          setBuyNowItem(item);
+          // Clear the stored item
+          localStorage.removeItem('buyNowItem');
+          console.log('✅ Buy Now item loaded:', item);
+        } catch (error) {
+          console.error('Error parsing buy now item:', error);
+        }
+      } else {
+        console.log('⚠️ No buy now item found in localStorage');
+      }
     }
-  }, [isAuthenticated, router]);
+    setBuyNowLoaded(true);
+  }, [searchParams]);
+
+  // Redirect if not authenticated (but wait for auth to load)
+  useEffect(() => {
+    // Only redirect if we're sure the user is not authenticated
+    // and we're not in a loading state
+    if (isAuthenticated === false && user === null && buyNowLoaded) {
+      console.log('🔒 User not authenticated, redirecting to home');
+      router.push('/');
+    }
+  }, [isAuthenticated, user, buyNowLoaded, router]);
 
   // Pre-fill form with user data
   useEffect(() => {
@@ -49,23 +82,55 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  // Calculate totals
-  const subtotal = cartItems.reduce(
+  // Calculate totals - handle both cart items and buy now item
+  const currentItems = buyNowItem ? [buyNowItem] : cartItems;
+  const subtotal = currentItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
   const shipping = subtotal > 1000 ? 0 : 100;
-  const total = subtotal + shipping;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = subtotal + shipping - discountAmount;
 
-  // Redirect if cart is empty
+  // Coupon handlers
+  const handleCouponApplied = (couponData: any) => {
+    setAppliedCoupon(couponData);
+  };
+
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
+  };
+
+  // Redirect if cart is empty and not buy now (but wait for everything to load)
   useEffect(() => {
-    if (cartItems.length === 0 && !orderComplete) {
+    // Only redirect if we're sure there are no items and buy now has been processed
+    if (buyNowLoaded && !buyNowItem && cartItems.length === 0 && !orderComplete && isAuthenticated) {
+      console.log('🛒 No items found, redirecting to cart');
       router.push('/cart');
     }
-  }, [cartItems.length, orderComplete, router]);
+  }, [buyNowItem, cartItems.length, orderComplete, buyNowLoaded, isAuthenticated, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    // Validate postal code for Odisha
+    if (name === 'postalCode') {
+      if (value && !isValidOdishaPostalCode(value)) {
+        setPostalCodeError('Please enter a valid Odisha postal code');
+      } else {
+        setPostalCodeError('');
+
+        // Auto-fill city if postal code is valid
+        if (value) {
+          const city = getCityByPostalCode(value);
+          if (city) {
+            setFormData(prev => ({ ...prev, [name]: value, city: city.name }));
+            return;
+          }
+        }
+      }
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -73,9 +138,20 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (step === 1) {
+      // Validate postal code before proceeding to step 2
+      if (postalCodeError) {
+        alert('Please enter a valid Odisha postal code before proceeding.');
+        return;
+      }
       setStep(2);
       window.scrollTo(0, 0);
     } else {
+      // Final validation before order submission
+      if (postalCodeError) {
+        alert('Please enter a valid Odisha postal code before placing the order.');
+        return;
+      }
+
       setIsSubmitting(true);
 
       try {
@@ -83,42 +159,74 @@ export default function CheckoutPage() {
         console.log('🔍 Checkout Debug Info:');
         console.log('- User:', user);
         console.log('- User ID:', user?.id);
+        console.log('- User ID type:', typeof user?.id);
+        console.log('- User ID length:', user?.id?.length);
+        console.log('- User email:', user?.email);
         console.log('- Is Authenticated:', isAuthenticated);
         console.log('- Cart Items:', cartItems);
 
-        if (!user?.id) {
-          throw new Error('User not authenticated. Please log in to place an order.');
+        if (!user?.id || user.id.trim() === '') {
+          console.error('❌ Invalid user ID:', user?.id);
+          throw new Error('User authentication error. Please log out and log in again.');
         }
 
-        if (!cartItems || cartItems.length === 0) {
-          throw new Error('Your cart is empty. Please add items to your cart before checkout.');
+        if (!user?.email || user.email.trim() === '') {
+          console.error('❌ Invalid user email:', user?.email);
+          throw new Error('User email missing. Please log out and log in again.');
+        }
+
+        if (!currentItems || currentItems.length === 0) {
+          throw new Error('No items to checkout. Please add items to your cart or try again.');
+        }
+
+        // Validate required form fields
+        const requiredFields = ['firstName', 'address', 'city', 'state', 'postalCode', 'phone'];
+        const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+
+        if (missingFields.length > 0) {
+          throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
         }
 
         // Create order
         const orderData = {
           userId: user.id,
-          items: cartItems.map(item => ({
+          items: currentItems.map(item => ({
             productId: item.id,
             quantity: item.quantity,
             unitPrice: item.price,
+            variantId: item.variantId,
+            weight: item.weight,
+            customName: item.customName,
           })),
           shippingAddress: {
-            street: formData.address,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.postalCode,
-            country: formData.country,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            phone: formData.phone,
+            street: formData.address || '',
+            city: formData.city || '',
+            state: formData.state || '',
+            pincode: formData.postalCode || '',
+            country: formData.country || 'India',
+            firstName: formData.firstName || '',
+            lastName: formData.lastName || '',
+            phone: formData.phone || '',
+            email: user.email || '', // Include user email for user lookup
           },
           paymentMethod: paymentMethod.toUpperCase(),
           totalAmount: total,
           subtotal: subtotal,
           shipping: shipping,
+          discountAmount: discountAmount,
+          couponCode: appliedCoupon?.coupon?.code || null,
+          couponId: appliedCoupon?.coupon?.id || null,
         };
 
         console.log('📦 Order Data:', orderData);
+        console.log('🔍 Order data validation:');
+        console.log('- User object:', user);
+        console.log('- User ID:', orderData.userId);
+        console.log('- User ID type:', typeof orderData.userId);
+        console.log('- User ID length:', orderData.userId?.length);
+        console.log('- Items count:', orderData.items?.length);
+        console.log('- Items details:', orderData.items);
+        console.log('- Shipping address:', orderData.shippingAddress);
 
         const response = await fetch('/api/customer-orders', {
           method: 'POST',
@@ -136,7 +244,11 @@ export default function CheckoutPage() {
 
           const orderNum = order.orderNumber || order.id;
           setOrderNumber(orderNum);
-          clearCart();
+
+          // Only clear cart if it's not a buy now purchase
+          if (!buyNowItem) {
+            clearCart();
+          }
 
           // Redirect to order success page
           router.push(`/order-success?orderNumber=${orderNum}`);
@@ -293,15 +405,21 @@ export default function CheckoutPage() {
                     <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                       City
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="city"
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                       required
-                    />
+                    >
+                      <option value="">Select City</option>
+                      {getAllCityNames().map((cityName) => (
+                        <option key={cityName} value={cityName}>
+                          {cityName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
@@ -311,15 +429,15 @@ export default function CheckoutPage() {
                       type="text"
                       id="state"
                       name="state"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      value="Odisha"
+                      readOnly
+                      className="w-full border rounded-md px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed"
                       required
                     />
                   </div>
                   <div>
                     <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
-                      Postal Code
+                      Postal Code (Odisha only)
                     </label>
                     <input
                       type="text"
@@ -327,29 +445,32 @@ export default function CheckoutPage() {
                       name="postalCode"
                       value={formData.postalCode}
                       onChange={handleInputChange}
-                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                        postalCodeError
+                          ? 'border-red-500 focus:ring-red-500'
+                          : 'border-gray-300 focus:ring-primary-500'
+                      }`}
+                      placeholder="e.g., 751001"
                       required
                     />
+                    {postalCodeError && (
+                      <p className="text-red-500 text-sm mt-1">{postalCodeError}</p>
+                    )}
                   </div>
                 </div>
                 <div className="mb-6">
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
                     Country
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="country"
                     name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    value="India"
+                    readOnly
+                    className="w-full border rounded-md px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed"
                     required
-                  >
-                    <option value="India">India</option>
-                    <option value="United States">United States</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Australia">Australia</option>
-                  </select>
+                  />
                 </div>
                 <div className="flex justify-end">
                   <button
@@ -503,10 +624,23 @@ export default function CheckoutPage() {
 
         {/* Order Summary */}
         <div className="lg:w-1/3">
+          {/* Coupon Section */}
+          {isAuthenticated && user?.id && (
+            <div className="mb-6">
+              <CouponSection
+                customerId={user.id}
+                orderAmount={subtotal}
+                onCouponApplied={handleCouponApplied}
+                onCouponRemoved={handleCouponRemoved}
+                appliedCoupon={appliedCoupon}
+              />
+            </div>
+          )}
+
           <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="divide-y">
-              {cartItems.map((item) => (
+              {currentItems.map((item) => (
                 <div key={item.id} className="py-3 flex">
                   <div className="h-16 w-16 relative flex-shrink-0 mr-4">
                     <Image
@@ -521,6 +655,9 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-800 font-medium">{item.name}</p>
+                    {item.customName && (
+                      <p className="text-orange-600 text-sm font-medium">🎂 Name: "{item.customName}"</p>
+                    )}
                     <p className="text-gray-600 text-sm">₹{item.price.toFixed(2)}</p>
                   </div>
                   <div className="text-right">
@@ -542,6 +679,12 @@ export default function CheckoutPage() {
                   {shipping === 0 ? 'Free' : `₹${shipping.toFixed(2)}`}
                 </span>
               </div>
+              {appliedCoupon && discountAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-green-600">Discount ({appliedCoupon.coupon.code})</span>
+                  <span className="text-green-600 font-medium">-₹{discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-2 border-t">
                 <span className="text-gray-800 font-semibold">Total</span>
                 <span className="text-primary-600 font-bold">₹{total.toFixed(2)}</span>
@@ -551,5 +694,20 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

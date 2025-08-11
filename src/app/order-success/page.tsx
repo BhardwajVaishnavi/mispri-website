@@ -16,50 +16,63 @@ function OrderSuccessContent() {
   const orderNumber = searchParams.get('orderNumber') || searchParams.get('order') || 'ORD-' + Date.now();
 
   useEffect(() => {
-    // Simulate fetching order details
+    // Fetch real order details from API
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
+        console.log('🔄 Fetching order details for:', orderNumber);
 
-        // Mock order details - in production, fetch from API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Try to fetch the order by order number
+        const response = await fetch(`/api/orders/by-number/${orderNumber}`);
 
-        const mockOrder = {
-          id: orderNumber,
-          orderNumber: orderNumber,
-          status: 'CONFIRMED',
-          paymentStatus: 'PAID',
-          totalAmount: 1299,
-          createdAt: new Date().toISOString(),
-          estimatedDelivery: 'Tomorrow, December 25, 2024',
-          items: [
-            {
-              id: '1',
-              name: 'Chocolate Birthday Cake',
-              quantity: 1,
-              price: 599,
-              image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop'
-            },
-            {
-              id: '2',
-              name: 'Red Rose Bouquet',
-              quantity: 1,
-              price: 899,
-              image: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=400&h=300&fit=crop'
-            }
-          ],
-          shippingAddress: {
-            firstName: 'John',
-            lastName: 'Doe',
-            street: '123 Main Street',
-            city: 'Bhubaneswar',
-            state: 'Odisha',
-            pincode: '751001',
-            phone: '+91 98765 43210'
-          }
-        };
+        if (response.ok) {
+          const orderData = await response.json();
+          console.log('✅ Order details fetched:', orderData);
 
-        setOrderDetails(mockOrder);
+          // Transform the order data to match the expected format
+          const transformedOrder = {
+            id: orderData.id,
+            orderNumber: orderData.orderNumber || orderNumber,
+            status: orderData.status || 'CONFIRMED',
+            paymentStatus: orderData.paymentStatus || 'PAID',
+            totalAmount: orderData.totalAmount || 0,
+            createdAt: orderData.createdAt || new Date().toISOString(),
+            estimatedDelivery: getEstimatedDelivery(orderData.createdAt),
+            items: orderData.orderItems?.map((item: any) => ({
+              id: item.id,
+              name: item.product?.name || 'Product',
+              quantity: item.quantity || 1,
+              price: item.unitPrice || 0,
+              image: item.product?.imageUrl || '/placeholder-product.jpg'
+            })) || [],
+            shippingAddress: orderData.address ? {
+              firstName: orderData.customer?.firstName || 'Customer',
+              lastName: orderData.customer?.lastName || '',
+              street: orderData.address.street || '',
+              city: orderData.address.city || '',
+              state: orderData.address.state || '',
+              pincode: orderData.address.postalCode || '',
+              phone: orderData.customer?.phone || ''
+            } : null
+          };
+
+          setOrderDetails(transformedOrder);
+        } else {
+          console.log('❌ Order not found, using fallback data');
+          // Fallback to basic order data if not found
+          const fallbackOrder = {
+            id: orderNumber,
+            orderNumber: orderNumber,
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            totalAmount: 0,
+            createdAt: new Date().toISOString(),
+            estimatedDelivery: getEstimatedDelivery(),
+            items: [],
+            shippingAddress: null
+          };
+          setOrderDetails(fallbackOrder);
+        }
 
         // Simulate email sending
         setTimeout(() => {
@@ -67,7 +80,21 @@ function OrderSuccessContent() {
         }, 2000);
 
       } catch (error) {
-        console.error('Error fetching order details:', error);
+        console.error('❌ Error fetching order details:', error);
+
+        // Fallback to basic order data on error
+        const fallbackOrder = {
+          id: orderNumber,
+          orderNumber: orderNumber,
+          status: 'CONFIRMED',
+          paymentStatus: 'PAID',
+          totalAmount: 0,
+          createdAt: new Date().toISOString(),
+          estimatedDelivery: getEstimatedDelivery(),
+          items: [],
+          shippingAddress: null
+        };
+        setOrderDetails(fallbackOrder);
       } finally {
         setLoading(false);
       }
@@ -75,6 +102,20 @@ function OrderSuccessContent() {
 
     fetchOrderDetails();
   }, [orderNumber]);
+
+  // Helper function to calculate estimated delivery
+  const getEstimatedDelivery = (createdAt?: string) => {
+    const orderDate = createdAt ? new Date(createdAt) : new Date();
+    const deliveryDate = new Date(orderDate);
+    deliveryDate.setDate(deliveryDate.getDate() + 1); // Next day delivery
+
+    return deliveryDate.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   const handleDownloadInvoice = () => {
     if (!orderDetails) {

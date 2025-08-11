@@ -39,23 +39,64 @@ export default function OrderTracking({ orderNumber, className = '' }: OrderTrac
       setLoading(true);
       setError(null);
 
-      // Mock order status - in production, fetch from API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('🔄 Fetching order status for:', orderNumber);
 
-      // Simulate order status based on order number
-      const mockStatus: OrderStatus = {
+      // Fetch real order status from API
+      const response = await fetch(`/api/orders/by-number/${orderNumber}`);
+
+      if (response.ok) {
+        const orderData = await response.json();
+        console.log('✅ Order status fetched:', orderData);
+
+        // Calculate estimated delivery
+        const orderDate = new Date(orderData.createdAt);
+        const deliveryDate = new Date(orderDate);
+        deliveryDate.setDate(deliveryDate.getDate() + 1); // Next day delivery
+
+        const estimatedDelivery = deliveryDate.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        const orderStatus: OrderStatus = {
+          id: orderData.id,
+          status: orderData.status || 'PENDING',
+          paymentStatus: orderData.paymentStatus || 'PENDING',
+          createdAt: orderData.createdAt,
+          estimatedDelivery: estimatedDelivery,
+          trackingNumber: orderData.trackingNumber || `TRK${orderNumber.slice(-6)}`
+        };
+
+        setOrderStatus(orderStatus);
+      } else {
+        console.log('❌ Order not found, using fallback');
+        // Fallback to basic status if order not found
+        const fallbackStatus: OrderStatus = {
+          id: orderNumber,
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
+          createdAt: new Date().toISOString(),
+          estimatedDelivery: 'Processing...',
+          trackingNumber: `TRK${orderNumber.slice(-6)}`
+        };
+        setOrderStatus(fallbackStatus);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching order status:', err);
+      setError('Failed to fetch order status');
+
+      // Fallback to basic status on error
+      const fallbackStatus: OrderStatus = {
         id: orderNumber,
-        status: 'CONFIRMED',
-        paymentStatus: 'PAID',
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
         createdAt: new Date().toISOString(),
-        estimatedDelivery: 'Tomorrow, December 25, 2024',
+        estimatedDelivery: 'Processing...',
         trackingNumber: `TRK${orderNumber.slice(-6)}`
       };
-
-      setOrderStatus(mockStatus);
-    } catch (err) {
-      setError('Failed to fetch order status');
-      console.error('Error fetching order status:', err);
+      setOrderStatus(fallbackStatus);
     } finally {
       setLoading(false);
     }

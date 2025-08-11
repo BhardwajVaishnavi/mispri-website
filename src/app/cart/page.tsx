@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiTrash2, FiArrowRight } from 'react-icons/fi';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import CouponSection from '@/components/cart/CouponSection';
 
 // Metadata is moved to layout.tsx since this is a client component
 // title: 'Shopping Cart - Bakery Shop',
@@ -12,13 +14,24 @@ import { useCart } from '@/contexts/CartContext';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
   const shipping = subtotal > 1000 ? 0 : 100;
-  const total = subtotal + shipping;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = subtotal + shipping - discountAmount;
+
+  const handleCouponApplied = (couponData: any) => {
+    setAppliedCoupon(couponData);
+  };
+
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -79,6 +92,11 @@ export default function CartPage() {
                             >
                               {item.name}
                             </Link>
+                            {item.customName && (
+                              <div className="text-sm text-orange-600 font-medium mt-1">
+                                🎂 Name: "{item.customName}"
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -155,27 +173,29 @@ export default function CartPage() {
                     {shipping === 0 ? 'Free' : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedCoupon.coupon.code})</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="border-t pt-3 flex justify-between">
                   <span className="text-gray-900 font-semibold">Total</span>
                   <span className="text-primary-600 font-bold">₹{total.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="mb-4">
-                <label htmlFor="coupon" className="block text-sm font-medium text-gray-700 mb-1">
-                  Coupon Code
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    id="coupon"
-                    className="flex-1 border rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="Enter coupon code"
+              {/* Coupon Section */}
+              {isAuthenticated && user?.id && (
+                <div className="mb-4">
+                  <CouponSection
+                    customerId={user.id}
+                    orderAmount={subtotal}
+                    onCouponApplied={handleCouponApplied}
+                    onCouponRemoved={handleCouponRemoved}
+                    appliedCoupon={appliedCoupon}
                   />
-                  <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-r-md transition-colors">
-                    Apply
-                  </button>
                 </div>
-              </div>
+              )}
               <Link
                 href="/checkout"
                 className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-md flex items-center justify-center transition-colors"

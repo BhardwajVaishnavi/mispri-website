@@ -16,13 +16,25 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
@@ -65,9 +77,115 @@ export default function AccountPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Clear all local storage and session data
+      localStorage.clear();
+      sessionStorage.clear();
+      // Force redirect and prevent back navigation
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect even if logout fails
+      window.location.href = '/';
+    }
+  };
+
+  const handleEditProfile = () => {
+    setEditForm({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: customerProfile?.phone || '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          name: editForm.name,
+          email: editForm.email,
+          phone: editForm.phone,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Profile updated successfully');
+
+        // Reload customer data to get updated info
+        await loadCustomerData();
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Profile update failed:', errorData);
+        alert(errorData.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('❌ Error updating profile:', error);
+      alert('Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user) return;
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/profile/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Password changed successfully');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        alert('Password changed successfully!');
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Password change failed:', errorData);
+        alert(errorData.error || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('❌ Error changing password:', error);
+      alert('Failed to change password');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isAuthenticated || !user) {
@@ -147,58 +265,117 @@ export default function AccountPage() {
           <div className="bg-white rounded-lg shadow-md p-6">
             {activeTab === 'profile' && (
               <div>
-                <h2 className="text-xl font-semibold mb-6">Profile Information</h2>
-                <form className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={customerProfile?.user?.name || user.name}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={customerProfile?.user?.email || user.email}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        defaultValue={customerProfile?.phone || ''}
-                      />
-                    </div>
-                  </div>
-                  <div className="pt-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Profile Information</h2>
+                  {!isEditing && (
                     <button
-                      type="submit"
-                      className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+                      onClick={handleEditProfile}
+                      className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
                     >
-                      Update Profile
+                      Edit Profile
                     </button>
+                  )}
+                </div>
+
+                {!isEditing ? (
+                  // Display Mode
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
+                          {user?.name || 'Not provided'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address
+                        </label>
+                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
+                          {user?.email || 'Not provided'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
+                          {customerProfile?.phone || 'Not provided'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </form>
+                ) : (
+                  // Edit Mode
+                  <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          id="name"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          id="phone"
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-4 flex gap-4">
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+                      >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-6 rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 <div className="mt-8 pt-8 border-t">
                   <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-                  <form className="space-y-4">
+                  <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
                     <div>
                       <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                         Current Password
@@ -206,7 +383,10 @@ export default function AccountPage() {
                       <input
                         type="password"
                         id="currentPassword"
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,7 +397,11 @@ export default function AccountPage() {
                         <input
                           type="password"
                           id="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                           className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          minLength={6}
+                          required
                         />
                       </div>
                       <div>
@@ -227,16 +411,21 @@ export default function AccountPage() {
                         <input
                           type="password"
                           id="confirmPassword"
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                           className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          minLength={6}
+                          required
                         />
                       </div>
                     </div>
                     <div className="pt-4">
                       <button
                         type="submit"
-                        className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+                        disabled={isSaving}
+                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-md transition-colors"
                       >
-                        Change Password
+                        {isSaving ? 'Changing...' : 'Change Password'}
                       </button>
                     </div>
                   </form>

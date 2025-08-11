@@ -10,58 +10,76 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-async function getProductsByCategory(category: string) {
+async function getProductsByCategory(categorySlug: string) {
   try {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
 
-    // Try to get products by category
-    const response = await fetch(`${API_BASE_URL}/products?categoryId=${encodeURIComponent(category)}`, {
+    console.log('Fetching products for category slug:', categorySlug);
+
+    // Get products by category slug
+    const response = await fetch(`${API_BASE_URL}/public/products?categoryId=${encodeURIComponent(categorySlug)}`, {
       cache: 'no-store'
     });
 
     if (!response.ok) {
-      console.error('Failed to fetch products for category:', category);
+      console.error('Failed to fetch products for category:', categorySlug, response.status);
       return [];
     }
 
     const products = await response.json();
-
-    // If no products found with exact match, try with capitalized first letter
-    if (!Array.isArray(products) || products.length === 0) {
-      const capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1);
-      const retryResponse = await fetch(`${API_BASE_URL}/products?categoryId=${encodeURIComponent(capitalizedCategory)}`, {
-        cache: 'no-store'
-      });
-
-      if (retryResponse.ok) {
-        const retryProducts = await retryResponse.json();
-        return Array.isArray(retryProducts) ? retryProducts : [];
-      }
-    }
+    console.log(`Found ${products.length} products for category:`, categorySlug);
 
     return Array.isArray(products) ? products : [];
   } catch (error) {
-    console.error('Error fetching products for category:', category, error);
+    console.error('Error fetching products for category:', categorySlug, error);
     return [];
   }
 }
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
-  const products = await getProductsByCategory(params.slug);
+async function getCategoryInfo(categorySlug: string) {
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
 
-  // Format category name from slug
-  const categoryName = params.slug
+    // Get category information
+    const response = await fetch(`${API_BASE_URL}/public/categories`, {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch categories');
+      return null;
+    }
+
+    const categories = await response.json();
+    const category = categories.find((cat: any) => cat.slug === categorySlug);
+
+    return category || null;
+  } catch (error) {
+    console.error('Error fetching category info:', error);
+    return null;
+  }
+}
+
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  const [products, categoryInfo] = await Promise.all([
+    getProductsByCategory(params.slug),
+    getCategoryInfo(params.slug)
+  ]);
+
+  // Use category info if available, otherwise format from slug
+  const displayCategory = categoryInfo?.name || params.slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
-  const displayCategory = products[0]?.category || categoryName;
+  const categoryDescription = categoryInfo?.description || `Browse our ${displayCategory.toLowerCase()} collection`;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{displayCategory}</h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 mb-2">{categoryDescription}</p>
+        <p className="text-sm text-gray-500">
           {products.length > 0
             ? `Showing ${products.length} product${products.length !== 1 ? 's' : ''}`
             : 'No products found in this category'

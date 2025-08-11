@@ -209,3 +209,81 @@ export async function registerUser(name: string, email: string, password: string
     throw error;
   }
 }
+
+/**
+ * Send forgot password OTP
+ */
+export async function sendForgotPasswordOTP(email: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send OTP');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error sending forgot password OTP:', error);
+    throw error;
+  }
+}
+
+/**
+ * Verify OTP
+ */
+export async function verifyOTP(email: string, otp: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Invalid OTP');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    throw error;
+  }
+}
+
+/**
+ * Reset password
+ */
+export async function resetPassword(email: string, otp: string, password: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to reset password');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    throw error;
+  }
+}
