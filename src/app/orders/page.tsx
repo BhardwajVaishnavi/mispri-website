@@ -47,19 +47,21 @@ export default function OrdersPage() {
   }, [isAuthenticated, user, router]);
 
   const fetchOrders = async () => {
-    if (!user?.id) return;
+    if (!user?.email) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/customer-orders?userId=${user.id}`);
-      
+      console.log('🔍 Fetching orders for email:', user.email);
+      const response = await fetch(`/api/customer-orders?email=${encodeURIComponent(user.email)}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch orders');
       }
 
       const ordersData = await response.json();
+      console.log('✅ Orders fetched:', ordersData.length);
       setOrders(ordersData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders');

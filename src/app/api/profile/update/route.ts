@@ -2,29 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(request: NextRequest) {
   try {
-    const { userId, name, email, phone } = await request.json();
+    const { email, name, phone } = await request.json();
 
-    if (!userId) {
+    if (!email) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Email is required' },
         { status: 400 }
       );
     }
 
-    console.log('🔄 Updating user profile:', { userId, name, email, phone });
+    console.log('🔄 Updating user profile:', { email, name, phone });
 
     // Forward to admin panel API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
 
-    const response = await fetch(`${API_BASE_URL}/profile/update`, {
+    const response = await fetch(`${API_BASE_URL}/profile/update-by-email`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId,
-        name,
         email,
+        name,
         phone,
       }),
     });

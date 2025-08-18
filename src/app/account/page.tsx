@@ -103,6 +103,14 @@ export default function AccountPage() {
     phone: '',
   });
 
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
   // Address form state
   const [addressForm, setAddressForm] = useState({
     type: 'HOME',
@@ -201,15 +209,14 @@ export default function AccountPage() {
 
 
   const handleProfileUpdate = async () => {
-    if (!user?.id) {
-      alert('User ID not found. Please log in again.');
+    if (!user?.email) {
+      alert('Email not found. Please log in again.');
       return;
     }
 
     console.log('Updating profile with data:', {
-      userId: user.id,
+      email: user.email,
       name: profileForm.name,
-      email: profileForm.email,
       phone: profileForm.phone,
     });
 
@@ -220,9 +227,8 @@ export default function AccountPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          email: user.email,
           name: profileForm.name,
-          email: profileForm.email,
           phone: profileForm.phone,
         }),
       });
@@ -242,6 +248,53 @@ export default function AccountPage() {
     } catch (error) {
       console.error('❌ Error updating profile:', error);
       alert('Error updating profile. Please try again.');
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!user?.email) {
+      alert('Email not found. Please log in again.');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New passwords do not match.');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('New password must be at least 6 characters long.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/profile/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Password changed successfully!');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setShowPasswordForm(false);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to change password: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error changing password:', error);
+      alert('Error changing password. Please try again.');
     }
   };
 
@@ -632,19 +685,11 @@ export default function AccountPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-primary-200 mb-3">
-                        Email Address *
+                        Email Address * (Cannot be changed)
                       </label>
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          value={profileForm.email}
-                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
-                          placeholder="Email Address"
-                        />
-                      ) : (
-                        <p className="text-primary-100 py-3">{user.email}</p>
-                      )}
+                      <p className="text-primary-100 py-3 bg-dark-600 px-4 rounded-lg border border-primary-200/20">
+                        {user.email}
+                      </p>
                     </div>
 
                     <div className="md:col-span-1">
@@ -663,6 +708,90 @@ export default function AccountPage() {
                         <p className="text-primary-100 py-3">{(user as any).phone || 'Not provided'}</p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Password Change Section */}
+                  <div className="mt-12 pt-8 border-t border-primary-200/20">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-primary-100">Change Password</h3>
+                      {!showPasswordForm ? (
+                        <button
+                          onClick={() => setShowPasswordForm(true)}
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-200 hover:text-primary-100 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors"
+                        >
+                          <FiEdit2 className="w-4 h-4" />
+                          <span>Change Password</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setShowPasswordForm(false);
+                            setPasswordForm({
+                              currentPassword: '',
+                              newPassword: '',
+                              confirmPassword: '',
+                            });
+                          }}
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-200 hover:text-primary-100 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors"
+                        >
+                          <FiX className="w-4 h-4" />
+                          <span>Cancel</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {showPasswordForm && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-primary-200 mb-3">
+                            Current Password *
+                          </label>
+                          <input
+                            type="password"
+                            value={passwordForm.currentPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                            className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                            placeholder="Enter current password"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-primary-200 mb-3">
+                            New Password *
+                          </label>
+                          <input
+                            type="password"
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                            className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                            placeholder="Enter new password"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-primary-200 mb-3">
+                            Confirm New Password *
+                          </label>
+                          <input
+                            type="password"
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                            className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                            placeholder="Confirm new password"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <button
+                            onClick={handlePasswordChange}
+                            className="flex items-center space-x-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                          >
+                            <FiSave className="w-4 h-4" />
+                            <span>Update Password</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -9,15 +9,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const email = searchParams.get('email');
 
-    if (!userId) {
+    if (!userId && !email) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'User ID or email is required' },
         { status: 400 }
       );
     }
 
-    console.log('🌐 Website API: Fetching orders for user:', userId);
+    console.log('🌐 Website API: Fetching orders for:', { userId, email });
 
     // Check if we're in development mode and should use local processing
     const isDevelopment = process.env.NODE_ENV === 'development';
@@ -41,20 +42,44 @@ export async function GET(request: NextRequest) {
         });
 
         console.log('✅ Prisma client initialized');
-        console.log('🔍 Looking for customer with userId:', userId);
 
         // Test database connection
         await prisma.$connect();
         console.log('✅ Database connected successfully');
 
-        // Database uses admin panel schema - find customer by userId
-        const customer = await prisma.customer.findFirst({
-          where: { userId: userId },
-        });
+        let customer = null;
+
+        if (email) {
+          // Find customer by email (preferred method)
+          console.log('🔍 Looking for customer with email:', email);
+          const user = await prisma.user.findUnique({
+            where: { email: email },
+            include: { customer: true }
+          });
+
+          if (user?.customer) {
+            customer = user.customer;
+            console.log('✅ Customer found by email:', customer.id);
+          } else {
+            console.log('ℹ️ Customer not found for email:', email);
+          }
+        } else if (userId) {
+          // Fallback to userId lookup
+          console.log('🔍 Looking for customer with userId:', userId);
+          customer = await prisma.customer.findFirst({
+            where: { userId: userId },
+          });
+
+          if (customer) {
+            console.log('✅ Customer found by userId:', customer.id);
+          } else {
+            console.log('ℹ️ Customer not found for userId:', userId);
+          }
+        }
 
         if (!customer) {
           await prisma.$disconnect();
-          console.log('ℹ️ Customer not found for userId:', userId, '- returning empty orders array');
+          console.log('ℹ️ No customer found - returning empty orders array');
           return NextResponse.json([]);
         }
 
@@ -138,7 +163,11 @@ export async function GET(request: NextRequest) {
     // Forward the request to the admin panel API (production or fallback)
     console.log('🔄 Forwarding to admin panel API:', API_BASE_URL);
 
-    const response = await fetch(`${API_BASE_URL}/customer-orders?userId=${userId}`, {
+    const queryParams = new URLSearchParams();
+    if (email) queryParams.append('email', email);
+    if (userId) queryParams.append('userId', userId);
+
+    const response = await fetch(`${API_BASE_URL}/customer-orders?${queryParams.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

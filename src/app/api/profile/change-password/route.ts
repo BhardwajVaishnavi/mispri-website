@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(request: NextRequest) {
   try {
-    const { userId, currentPassword, newPassword } = await request.json();
+    const { email, currentPassword, newPassword } = await request.json();
 
-    if (!userId || !currentPassword || !newPassword) {
+    if (!email || !currentPassword || !newPassword) {
       return NextResponse.json(
-        { error: 'User ID, current password, and new password are required' },
+        { error: 'Email, current password, and new password are required' },
         { status: 400 }
       );
     }
 
-    console.log('🔄 Changing user password for userId:', userId);
+    console.log('🔄 Changing user password for email:', email);
 
     // Forward to admin panel API
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api';
@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId,
+          email,
           currentPassword,
           newPassword,
         }),
