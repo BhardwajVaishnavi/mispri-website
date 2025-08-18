@@ -10,38 +10,33 @@ export default function Footer() {
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
   return (
-    <footer style={{ backgroundColor: '#5F9EA0' }} className="pt-2 pb-1">
+    <footer className="bg-dark-800 pt-2 pb-1">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Main Footer Links */}
-        <div className="bg-white py-1 sm:py-2 px-8 sm:px-12 lg:px-16 rounded-lg mb-1">
+        <div className="bg-dark-700 border border-primary-200/20 py-1 sm:py-2 px-8 sm:px-12 lg:px-16 rounded-lg mb-1">
           {/* Mobile: Compact 2-column grid */}
           <div className="grid grid-cols-2 sm:hidden gap-4">
             {/* Mobile Column 1 */}
             <div>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/pages/about-us" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                  <Link href="/about-us" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/coupons-deals" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Coupons & Deals
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/faq" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                  <Link href="/help" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
                     FAQ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact-us" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                  <Link href="/contact" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/delivery-areas" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Delivery Areas
+                  <Link href="/privacy-policy" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                    Privacy Policy
                   </Link>
                 </li>
               </ul>
@@ -51,23 +46,23 @@ export default function Footer() {
             <div>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/pages/media" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Media
+                  <Link href="/terms" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                    Terms
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/privacy-policy" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Privacy Policy
+                  <Link href="/refund-policy" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                    Refund Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/reviews" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Reviews
+                  <Link href="/shipping-policy" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                    Shipping
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/blog" className="text-xs text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
-                    Blog
+                  <Link href="/care-instructions" className="text-xs text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-1 hover:font-semibold">
+                    Care Guide
                   </Link>
                 </li>
               </ul>
@@ -78,25 +73,21 @@ export default function Footer() {
           <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Column 1 - Company Info */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 lg:mb-4 transition-all duration-300 hover:text-primary-600 hover:translate-x-1">Company</h3>
+              <h3 className="text-sm font-semibold text-primary-100 mb-3 lg:mb-4 transition-all duration-300 hover:text-primary-400 hover:translate-x-1">Company</h3>
               <ul className="space-y-2 lg:space-y-3">
                 <li>
-                  <Link href="/pages/about-us" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/about-us" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     About Us
                   </Link>
                 </li>
+
                 <li>
-                  <Link href="/pages/coupons-deals" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Coupons & Deals
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pages/cancellation-refund" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/refund-policy" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     Cancellation & Refund
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/terms-conditions" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/terms" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     Terms and Conditions
                   </Link>
                 </li>
@@ -118,62 +109,58 @@ export default function Footer() {
 
             {/* Column 2 - Services */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 lg:mb-4">Services</h3>
+              <h3 className="text-sm font-semibold text-primary-100 mb-3 lg:mb-4">Services</h3>
               <ul className="space-y-2 lg:space-y-3">
                 <li>
-                  <Link href="/pages/media" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Media
+                  <Link href="/help" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                    Help & FAQ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/privacy-policy" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/privacy-policy" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/reviews" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Reviews
+                  <Link href="/refund-policy" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                    Refund Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/blog" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Blog
+                  <Link href="/shipping-policy" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                    Shipping Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/sitemap" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Sitemap
+                  <Link href="/care-instructions" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                    Care Instructions
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/quotes" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Quotes
+                  <Link href="/contact" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                    Contact Us
                   </Link>
                 </li>
-                <li className="hidden lg:block">
-                  <Link href="/pages/corporate-gifts" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
-                    Corporate Gifts
-                  </Link>
-                </li>
+
               </ul>
             </div>
 
             {/* Column 3 - Support */}
             <div className="space-y-3 sm:col-span-2 lg:col-span-1">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 lg:mb-4">Support</h3>
+              <h3 className="text-sm font-semibold text-primary-100 mb-3 lg:mb-4">Support</h3>
               <ul className="space-y-2 lg:space-y-3">
                 <li>
-                  <Link href="/pages/faq" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/help" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     FAQ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/contact-us" className="text-sm text-gray-700 hover:text-primary-600 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
+                  <Link href="/contact" className="text-sm text-primary-200 hover:text-primary-400 transition-all duration-300 hover:translate-x-2 hover:font-semibold">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="https://wa.me/919876543210" className="text-sm text-gray-700 hover:text-primary-600 transition-colors">
+                  <Link href="https://wa.me/919938938780" className="text-sm text-primary-200 hover:text-primary-400 transition-colors">
                     WhatsApp Support
                   </Link>
                 </li>
@@ -183,14 +170,14 @@ export default function Footer() {
         </div>
 
         {/* Social Media */}
-        <div className="bg-white py-1 px-8 sm:px-12 lg:px-16 rounded-lg mb-1">
+        <div className="bg-dark-700 border border-primary-200/20 py-1 px-8 sm:px-12 lg:px-16 rounded-lg mb-1">
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-gray-700 mb-1 transition-all duration-300 hover:text-primary-600 hover:font-semibold cursor-default">
+            <p className="text-xs sm:text-sm text-primary-200 mb-1 transition-all duration-300 hover:text-primary-400 hover:font-semibold cursor-default">
               Follow Us On Social Media
             </p>
             <div className="flex justify-center gap-2 sm:gap-3">
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/Misprithecakeshop/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
@@ -199,25 +186,7 @@ export default function Footer() {
                 <FaFacebook size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
               </a>
               <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-black text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:-rotate-12"
-                aria-label="Follow us on Twitter"
-              >
-                <FaTwitter size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-red-600 text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
-                aria-label="Subscribe to our YouTube channel"
-              >
-                <FaYoutube size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
-              </a>
-              <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/mispri_cakeshop/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-pink-600 text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:-rotate-12"
@@ -226,13 +195,13 @@ export default function Footer() {
                 <FaInstagram size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.youtube.com/@mispricakeshop"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-blue-700 text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
-                aria-label="Connect with us on LinkedIn"
+                className="bg-red-600 text-white p-1.5 sm:p-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
+                aria-label="Subscribe to our YouTube channel"
               >
-                <FaLinkedin size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
+                <FaYoutube size={12} className="sm:w-3 sm:h-3 lg:w-4 lg:h-4" />
               </a>
             </div>
           </div>
@@ -250,13 +219,13 @@ export default function Footer() {
                 height={24}
               />
             </Link>
-            <p className="text-xs text-white leading-tight px-2">
+            <p className="text-xs text-primary-200 leading-tight px-2">
               © 2025 Mispri. All rights reserved by{' '}
               <a
                 href="https://www.wipstertechnologies.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-yellow-200 font-semibold transition-all duration-300 hover:underline"
+                className="hover:text-primary-400 font-semibold transition-all duration-300 hover:underline"
               >
                 Wipster Technologies
               </a>
@@ -276,13 +245,13 @@ export default function Footer() {
               </Link>
             </div>
             <div className="text-right">
-              <p className="text-sm text-white leading-tight">
+              <p className="text-sm text-primary-200 leading-tight">
                 © 2025 Mispri. All rights reserved by{' '}
                 <a
                   href="https://www.wipstertechnologies.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-yellow-200 font-semibold transition-all duration-300 hover:underline"
+                  className="hover:text-primary-400 font-semibold transition-all duration-300 hover:underline"
                 >
                   Wipster Technologies Private Limited
                 </a>
@@ -296,8 +265,7 @@ export default function Footer() {
           {/* Back to top button */}
           <a
             href="#top"
-            className="text-white p-2.5 sm:p-3 rounded-full shadow-lg transition-colors hover:opacity-90"
-            style={{ backgroundColor: '#5F9EA0' }}
+            className="bg-primary-600 text-white p-2.5 sm:p-3 rounded-full shadow-lg transition-colors hover:bg-primary-700"
             aria-label="Back to top"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -306,7 +274,7 @@ export default function Footer() {
           </a>
           {/* WhatsApp button */}
           <a
-            href="https://wa.me/919876543210"
+            href="https://wa.me/919938938780"
             className="bg-green-500 text-white p-2.5 sm:p-3 rounded-full shadow-lg hover:bg-green-600 transition-colors"
             aria-label="Contact on WhatsApp"
             target="_blank"

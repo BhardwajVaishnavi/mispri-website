@@ -1,110 +1,218 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FiUser, FiShoppingBag, FiHeart, FiMapPin, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiEdit2,
+  FiSave,
+  FiX,
+  FiPlus,
+  FiTrash2,
+  FiPackage,
+  FiHeart,
+  FiSettings,
+  FiLogOut,
+  FiCalendar,
+  FiClock,
+  FiTruck,
+  FiCheckCircle,
+  FiXCircle
+} from 'react-icons/fi';
+import Link from 'next/link';
 
-// Metadata is moved to layout.tsx since this is a client component
-// title: 'My Account - Bakery Shop',
-// description: 'Manage your account and view your orders'
+interface Address {
+  id: string;
+  type: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
+interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  product?: {
+    name: string;
+    imageUrl?: string;
+  };
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  status: string;
+  totalAmount: number;
+  paymentStatus: string;
+  orderItems?: OrderItem[];
+  items?: OrderItem[];
+  address?: Address;
+}
+
+interface WishlistItem {
+  id: string;
+  productId: string;
+  userId: string;
+  createdAt: string;
+  product?: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+  };
+  products?: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+  };
+}
 
 export default function AccountPage() {
-  const [activeTab, setActiveTab] = useState('profile');
-  const [customerProfile, setCustomerProfile] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState('orders');
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editForm, setEditForm] = useState({
+
+  // Data states
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+
+  // Loading states
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
+
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
     phone: '',
   });
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+
+  // Address form state
+  const [addressForm, setAddressForm] = useState({
+    type: 'HOME',
+    street: '',
+    city: '',
+    state: 'Odisha',
+    postalCode: '',
+    country: 'India',
+    isDefault: false,
   });
-  const { user, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<string | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  // Load customer data
+  // Initialize profile form with user data
   useEffect(() => {
-    if (user && isAuthenticated) {
-      loadCustomerData();
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: (user as any).phone || '',
+      });
     }
-  }, [user, isAuthenticated]);
+  }, [user]);
 
-  const loadCustomerData = async () => {
-    if (!user) return;
+  // Load data based on active tab
+  useEffect(() => {
+    if (user?.id) {
+      if (activeTab === 'orders') {
+        loadOrders();
+      } else if (activeTab === 'addresses') {
+        loadAddresses();
+      } else if (activeTab === 'wishlist') {
+        loadWishlist();
+      }
+    }
+  }, [user?.id, activeTab]);
 
-    setIsLoading(true);
+  const loadOrders = async () => {
+    if (!user?.id) return;
+
+    setLoadingOrders(true);
     try {
-      // Load customer profile
-      const profileResponse = await fetch(`/api/customer-profile/${user.id}`);
-      if (profileResponse.ok) {
-        const profile = await profileResponse.json();
-        setCustomerProfile(profile);
-      }
-
-      // Load orders
-      const ordersResponse = await fetch(`/api/customer-orders?userId=${user.id}`);
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
-        setOrders(ordersData);
-      }
-
-      // Load addresses
-      const addressesResponse = await fetch(`/api/addresses?userId=${user.id}`);
-      if (addressesResponse.ok) {
-        const addressesData = await addressesResponse.json();
-        setAddresses(addressesData);
+      const response = await fetch(`/api/customer-orders?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data);
       }
     } catch (error) {
-      console.error('Error loading customer data:', error);
+      console.error('Error loading orders:', error);
     } finally {
-      setIsLoading(false);
+      setLoadingOrders(false);
     }
   };
 
-  const handleLogout = async () => {
+  const loadAddresses = async () => {
+    if (!user?.id) return;
+
+    setLoadingAddresses(true);
     try {
-      await logout();
-      // Clear all local storage and session data
-      localStorage.clear();
-      sessionStorage.clear();
-      // Force redirect and prevent back navigation
-      window.location.href = '/';
+      const response = await fetch(`/api/addresses?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAddresses(data);
+      }
     } catch (error) {
-      console.error('Logout error:', error);
-      // Force redirect even if logout fails
-      window.location.href = '/';
+      console.error('Error loading addresses:', error);
+    } finally {
+      setLoadingAddresses(false);
     }
   };
 
-  const handleEditProfile = () => {
-    setEditForm({
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: customerProfile?.phone || '',
-    });
-    setIsEditing(true);
+  const loadWishlist = async () => {
+    if (!user?.id) return;
+
+    setLoadingWishlist(true);
+    try {
+      const response = await fetch(`/api/wishlist?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWishlistItems(data);
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+    } finally {
+      setLoadingWishlist(false);
+    }
   };
 
-  const handleSaveProfile = async () => {
-    if (!user) return;
 
-    setIsSaving(true);
+
+  const handleProfileUpdate = async () => {
+    if (!user?.id) {
+      alert('User ID not found. Please log in again.');
+      return;
+    }
+
+    console.log('Updating profile with data:', {
+      userId: user.id,
+      name: profileForm.name,
+      email: profileForm.email,
+      phone: profileForm.phone,
+    });
+
     try {
       const response = await fetch('/api/profile/update', {
         method: 'PUT',
@@ -113,485 +221,463 @@ export default function AccountPage() {
         },
         body: JSON.stringify({
           userId: user.id,
-          name: editForm.name,
-          email: editForm.email,
-          phone: editForm.phone,
+          name: profileForm.name,
+          email: profileForm.email,
+          phone: profileForm.phone,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Profile updated successfully');
+      console.log('Response status:', response.status);
 
-        // Reload customer data to get updated info
-        await loadCustomerData();
+      if (response.ok) {
+        const updatedUser = await response.json();
+        console.log('✅ Profile updated successfully:', updatedUser);
         setIsEditing(false);
         alert('Profile updated successfully!');
       } else {
         const errorData = await response.json();
         console.error('❌ Profile update failed:', errorData);
-        alert(errorData.error || 'Failed to update profile');
+        alert(`Failed to update profile: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('❌ Error updating profile:', error);
-      alert('Failed to update profile');
-    } finally {
-      setIsSaving(false);
+      alert('Error updating profile. Please try again.');
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!user) return;
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match');
-      return;
-    }
 
-    if (passwordForm.newPassword.length < 6) {
-      alert('New password must be at least 6 characters long');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const response = await fetch('/api/profile/change-password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
-      });
-
-      if (response.ok) {
-        console.log('✅ Password changed successfully');
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        });
-        alert('Password changed successfully!');
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Password change failed:', errorData);
-        alert(errorData.error || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error('❌ Error changing password:', error);
-      alert('Failed to change password');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (!isAuthenticated || !user) {
-    return null; // Will redirect to login
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">My Account</h1>
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar */}
-        <div className="md:w-1/4">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-6">
-              <h2 className="font-semibold text-lg mb-2">{user.name}</h2>
-              <p className="text-gray-600 text-sm">{user.email}</p>
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'delivered':
+        return 'text-green-600 bg-green-50';
+      case 'pending':
+      case 'pending_assignment':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'in_progress':
+      case 'assigned':
+        return 'text-blue-600 bg-blue-50';
+      case 'cancelled':
+        return 'text-red-600 bg-red-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(price);
+  };
+
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: FiUser },
+    { id: 'addresses', label: 'Addresses', icon: FiMapPin },
+    { id: 'orders', label: 'Orders', icon: FiPackage },
+    { id: 'wishlist', label: 'Wishlist', icon: FiHeart },
+    { id: 'settings', label: 'Settings', icon: FiSettings },
+  ];
+
+  return (
+    <div className="min-h-screen bg-dark-800">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="bg-dark-700 border-b border-primary-200/20">
+          <div className="px-6 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-primary-100/20 rounded-full flex items-center justify-center overflow-hidden border-2 border-primary-300/30">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <FiUser className="w-8 h-8 text-primary-200" />
+                  )}
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold text-primary-100">{user.name}</h1>
+                  <p className="text-primary-200/80">{user.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="flex items-center space-x-2 px-4 py-2 text-primary-200 hover:text-primary-100 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors"
+              >
+                <FiLogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
             </div>
-            <nav className="space-y-1">
-              <button
-                className={`w-full text-left px-4 py-2 rounded-md flex items-center ${
-                  activeTab === 'profile'
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('profile')}
-              >
-                <FiUser className="mr-3" />
-                Profile
-              </button>
-              <button
-                className={`w-full text-left px-4 py-2 rounded-md flex items-center ${
-                  activeTab === 'orders'
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('orders')}
-              >
-                <FiShoppingBag className="mr-3" />
-                Orders
-              </button>
-              <button
-                className={`w-full text-left px-4 py-2 rounded-md flex items-center ${
-                  activeTab === 'wishlist'
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('wishlist')}
-              >
-                <FiHeart className="mr-3" />
-                Wishlist
-              </button>
-              <button
-                className={`w-full text-left px-4 py-2 rounded-md flex items-center ${
-                  activeTab === 'addresses'
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setActiveTab('addresses')}
-              >
-                <FiMapPin className="mr-3" />
-                Addresses
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 rounded-md flex items-center text-gray-700 hover:bg-gray-50"
-                onClick={handleLogout}
-              >
-                <FiLogOut className="mr-3" />
-                Logout
-              </button>
-            </nav>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="md:w-3/4">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            {activeTab === 'profile' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Profile Information</h2>
-                  {!isEditing && (
-                    <button
-                      onClick={handleEditProfile}
-                      className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
-                    >
-                      Edit Profile
+        <div className="flex">
+          {/* Sidebar */}
+          <div className="w-64 bg-dark-700 border-r border-primary-200/20">
+            <nav className="p-6">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors mb-2 rounded-lg ${
+                      activeTab === tab.id
+                        ? 'bg-primary-500/20 text-primary-100 border-l-4 border-primary-400 font-medium'
+                        : 'text-primary-200/80 hover:bg-primary-100/10 hover:text-primary-100'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 bg-dark-800">
+            <div className="p-8">
+              {/* Orders Tab */}
+              {activeTab === 'orders' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <FiPackage className="w-16 h-16 text-primary-300 mx-auto mb-4" />
+                    <h2 className="text-2xl font-semibold text-primary-100 mb-2">Your Orders</h2>
+                    <p className="text-primary-200/80">View and track your order history</p>
+                    <button className="mt-4 bg-primary-500 text-white px-6 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+                      View Orders
                     </button>
+                  </div>
+
+                  {loadingOrders ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
+                      <p className="mt-2 text-primary-200/80">Loading orders...</p>
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-primary-200/80">No orders found</p>
+                      <Link
+                        href="/products"
+                        className="inline-flex items-center px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors mt-4"
+                      >
+                        Start Shopping
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div key={order.id} className="border border-primary-200/20 bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-primary-100">Order #{order.orderNumber}</h3>
+                              <p className="text-sm text-primary-200/80">
+                                <FiCalendar className="inline w-4 h-4 mr-1" />
+                                {formatDate(order.createdAt)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-primary-100">{formatPrice(order.totalAmount)}</p>
+                              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                                {order.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {(order.orderItems || order.items) && (
+                            <div className="border-t border-primary-200/20 pt-3">
+                              <p className="text-sm text-primary-200/80 mb-2">Items:</p>
+                              <div className="space-y-1">
+                                {(order.orderItems || order.items)?.slice(0, 3).map((item, index) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-primary-200">
+                                      {item.product?.name || item.productName} × {item.quantity}
+                                    </span>
+                                    <span className="text-primary-300">{formatPrice(item.total || (item.unitPrice * item.quantity))}</span>
+                                  </div>
+                                ))}
+                                {(order.orderItems || order.items)?.length > 3 && (
+                                  <p className="text-sm text-primary-200/60">
+                                    +{(order.orderItems || order.items).length - 3} more items
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center mt-4 pt-3 border-t border-primary-200/20">
+                            <Link
+                              href={`/order-details/${order.orderNumber}`}
+                              className="text-primary-400 hover:text-primary-300 text-sm font-medium"
+                            >
+                              View Details
+                            </Link>
+                            {order.status.toLowerCase() === 'delivered' && (
+                              <button className="text-primary-400 hover:text-primary-300 text-sm font-medium">
+                                Reorder
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
+              )}
 
-                {!isEditing ? (
-                  // Display Mode
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
-                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
-                          {user?.name || 'Not provided'}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email Address
-                        </label>
-                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
-                          {user?.email || 'Not provided'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone Number
-                        </label>
-                        <div className="w-full border rounded-md px-3 py-2 bg-gray-50">
-                          {customerProfile?.phone || 'Not provided'}
-                        </div>
-                      </div>
-                    </div>
+              {/* Addresses Tab */}
+              {activeTab === 'addresses' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <FiMapPin className="w-16 h-16 text-primary-300 mx-auto mb-4" />
+                    <h2 className="text-2xl font-semibold text-primary-100 mb-2">Your Addresses</h2>
+                    <p className="text-primary-200/80">Manage your delivery addresses</p>
                   </div>
-                ) : (
-                  // Edit Mode
-                  <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} className="space-y-4">
+
+                  {loadingAddresses ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
+                      <p className="mt-2 text-primary-200/80">Loading addresses...</p>
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-primary-200/80">No addresses found</p>
+                      <p className="text-sm text-primary-200/60 mt-2">Addresses from your orders will appear here</p>
+                    </div>
+                  ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
+                      {addresses.map((address) => (
+                        <div key={address.id} className="border border-primary-200/20 bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="font-semibold text-primary-100">{address.type}</h3>
+                              {address.isDefault && (
+                                <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-sm text-primary-200/80 space-y-1">
+                            <p>{address.street}</p>
+                            <p>{address.city}, {address.state} {address.postalCode}</p>
+                            <p>{address.country}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Wishlist Tab */}
+              {activeTab === 'wishlist' && (
+                <div>
+                  <div className="text-center mb-8">
+                    <FiHeart className="w-16 h-16 text-primary-300 mx-auto mb-4" />
+                    <h2 className="text-2xl font-semibold text-primary-100 mb-2">Your Wishlist</h2>
+                    <p className="text-primary-200/80">Save items for later</p>
+                  </div>
+
+                  {loadingWishlist ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
+                      <p className="mt-2 text-primary-200/80">Loading wishlist...</p>
+                    </div>
+                  ) : wishlistItems.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-primary-200/80">Your wishlist is empty</p>
+                      <Link
+                        href="/products"
+                        className="inline-flex items-center px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors mt-4"
+                      >
+                        Browse Products
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {wishlistItems.map((item) => {
+                        const product = item.product || item.products;
+                        return (
+                          <div key={item.id} className="border border-primary-200/20 bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors">
+                            <div className="aspect-square bg-dark-600 rounded-lg mb-3 overflow-hidden">
+                              {product?.imageUrl ? (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-primary-300">
+                                  <FiPackage className="w-8 h-8" />
+                                </div>
+                              )}
+                            </div>
+                            <h3 className="font-semibold text-primary-100 mb-1">{product?.name}</h3>
+                            <p className="text-primary-300 font-semibold mb-3">{formatPrice(product?.price || 0)}</p>
+                            <div className="flex space-x-2">
+                              <Link
+                                href={`/product/${product?.id}`}
+                                className="flex-1 bg-primary-500 text-white text-center py-2 rounded-lg hover:bg-primary-600 transition-colors text-sm"
+                              >
+                                View Product
+                              </Link>
+                              <button className="px-3 py-2 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors">
+                                <FiTrash2 className="w-4 h-4 text-primary-200" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Profile Tab */}
+              {activeTab === 'profile' && (
+                <div>
+                  {user?.id?.startsWith('google-') && (
+                    <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-4 mb-6">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-yellow-400 font-medium">Account Setup Required</h3>
+                          <p className="text-yellow-300/80 text-sm mt-1">
+                            Your Google account needs to be properly set up in our database. Click "Fix Account" to complete the setup.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-2xl font-semibold text-primary-100">Profile Information</h2>
+                    {!isEditing ? (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center space-x-2 px-4 py-2 text-primary-200 hover:text-primary-100 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors"
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                    ) : (
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleProfileUpdate}
+                          className="flex items-center space-x-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                        >
+                          <FiSave className="w-4 h-4" />
+                          <span>Save</span>
+                        </button>
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-200 hover:text-primary-100 border border-primary-200/30 rounded-lg hover:bg-primary-100/10 transition-colors"
+                        >
+                          <FiX className="w-4 h-4" />
+                          <span>Cancel</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-sm font-medium text-primary-200 mb-3">
+                        Full Name *
+                      </label>
+                      {isEditing ? (
                         <input
                           type="text"
-                          id="name"
-                          value={editForm.name}
-                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          required
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                          className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                          placeholder="Your Name"
                         />
-                      </div>
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                          Email Address
-                        </label>
+                      ) : (
+                        <p className="text-primary-100 py-3">{user.name}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-200 mb-3">
+                        Email Address *
+                      </label>
+                      {isEditing ? (
                         <input
                           type="email"
-                          id="email"
-                          value={editForm.email}
-                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          required
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                          className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                          placeholder="Email Address"
                         />
-                      </div>
+                      ) : (
+                        <p className="text-primary-100 py-3">{user.email}</p>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone Number
-                        </label>
+
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-medium text-primary-200 mb-3">
+                        Phone Number
+                      </label>
+                      {isEditing ? (
                         <input
                           type="tel"
-                          id="phone"
-                          value={editForm.phone}
-                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          value={profileForm.phone}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                          className="w-full px-4 py-3 border border-primary-200/30 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 text-dark-800 bg-gray-100"
+                          placeholder="Phone Number"
                         />
-                      </div>
+                      ) : (
+                        <p className="text-primary-100 py-3">{(user as any).phone || 'Not provided'}</p>
+                      )}
                     </div>
-                    <div className="pt-4 flex gap-4">
-                      <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-md transition-colors"
-                      >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditing(false)}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-6 rounded-md transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                <div className="mt-8 pt-8 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-                  <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
-                    <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        id="currentPassword"
-                        value={passwordForm.currentPassword}
-                        onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                          New Password
-                        </label>
-                        <input
-                          type="password"
-                          id="newPassword"
-                          value={passwordForm.newPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          minLength={6}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                          Confirm New Password
-                        </label>
-                        <input
-                          type="password"
-                          id="confirmPassword"
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          minLength={6}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="pt-4">
-                      <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-md transition-colors"
-                      >
-                        {isSaving ? 'Changing...' : 'Change Password'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'orders' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-6">My Orders</h2>
-                {orders.length === 0 ? (
-                  <div className="bg-white border rounded-lg p-8 text-center">
-                    <div className="mb-4">
-                      <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                    <p className="text-gray-600 mb-6">
-                      You haven't placed any orders yet. Start shopping to see your order history here.
-                    </p>
-                    <Link
-                      href="/products"
-                      className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                    >
-                      Start Shopping
-                    </Link>
                   </div>
-                ) : (
-                  <div className="space-y-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-4">
-                        <div className="flex flex-wrap justify-between mb-4">
-                          <div>
-                            <p className="font-medium">Order #{order.orderNumber || order.id}</p>
-                            <p className="text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                              order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="border-t pt-4">
-                          <p className="text-sm text-gray-600 mb-2">Items:</p>
-                          <ul className="space-y-1 mb-4">
-                            {order.orderItems?.map((item: any, index: number) => (
-                              <li key={index} className="text-sm">
-                                {item.quantity} x {item.product?.name || 'Product'}
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="flex justify-between">
-                            <p className="font-medium">Total:</p>
-                            <p className="font-medium">₹{order.totalAmount?.toFixed(2)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Future: When orders exist, show them here */}
-            {false && (
-                  <div className="space-y-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-4">
-                        <div className="flex flex-wrap justify-between mb-4">
-                          <div>
-                            <p className="font-medium">Order #{order.id}</p>
-                            <p className="text-sm text-gray-600">Placed on {order.date}</p>
-                          </div>
-                          <div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="border-t pt-4">
-                          <p className="text-sm text-gray-600 mb-2">Items:</p>
-                          <ul className="space-y-1 mb-4">
-                            {order.items.map((item, index) => (
-                              <li key={index} className="text-sm">
-                                {item.quantity} x {item.name}
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="flex justify-between">
-                            <p className="font-medium">Total:</p>
-                            <p className="font-medium">₹{order.total.toFixed(2)}</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 pt-4 border-t flex justify-between">
-                          <Link
-                            href={`/account/orders/${order.id}`}
-                            className="text-primary-600 hover:text-primary-800 font-medium text-sm"
-                          >
-                            View Order Details
-                          </Link>
-                          <button className="text-primary-600 hover:text-primary-800 font-medium text-sm">
-                            Track Order
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+              {/* Settings Tab */}
+              {activeTab === 'settings' && (
+                <div>
+                  <div className="text-center py-12">
+                    <FiSettings className="w-16 h-16 text-primary-300 mx-auto mb-4" />
+                    <h3 className="text-2xl font-semibold text-primary-100 mb-2">Account Settings</h3>
+                    <p className="text-primary-200/80">Manage your account preferences and security settings</p>
                   </div>
-                )}
-
-            {activeTab === 'wishlist' && (
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold">My Wishlist</h2>
-                  <Link
-                    href="/wishlist"
-                    className="text-primary-600 hover:text-primary-800 font-medium text-sm"
-                  >
-                    View Full Wishlist
-                  </Link>
                 </div>
-                <p className="text-gray-600 mb-4">
-                  Save items you love to your wishlist and shop them later.
-                </p>
-                <div className="mt-4">
-                  <Link
-                    href="/products"
-                    className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                  >
-                    Continue Shopping
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'addresses' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">My Addresses</h2>
-                  <button className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors">
-                    Add New Address
-                  </button>
-                </div>
-                <div className="bg-white border rounded-lg p-8 text-center">
-                  <div className="mb-4">
-                    <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses saved</h3>
-                  <p className="text-gray-600 mb-6">
-                    Add your delivery addresses to make checkout faster and easier.
-                  </p>
-                  <button className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
-                    Add Your First Address
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

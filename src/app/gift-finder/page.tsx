@@ -40,21 +40,27 @@ export default function GiftFinderPage() {
     async function fetchData() {
       try {
         const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/products`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/categories`)
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/public/products`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mispri24.vercel.app/api'}/public/categories`)
         ]);
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
+          console.log('Gift Finder - Products data:', productsData);
           setProducts(Array.isArray(productsData) ? productsData : []);
+        } else {
+          console.error('Gift Finder - Failed to fetch products:', productsRes.status);
         }
 
         if (categoriesRes.ok) {
           const categoriesData = await categoriesRes.json();
+          console.log('Gift Finder - Categories data:', categoriesData);
           const categoryNames = Array.isArray(categoriesData)
             ? categoriesData.map((c: any) => c.name || c.category || c)
             : [];
           setCategories(categoryNames);
+        } else {
+          console.error('Gift Finder - Failed to fetch categories:', categoriesRes.status);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

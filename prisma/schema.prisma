@@ -15,6 +15,7 @@ model User {
   name                String
   email               String               @unique
   password            String
+  phone               String?
   role                UserRole             @default(STAFF)
   storeId             String?              @map("store_id")
   resetToken          String?              @map("reset_token")
@@ -334,7 +335,6 @@ model CustomerVisit {
   notes      String?
   createdAt  DateTime @default(now()) @map("created_at")
   customer   User     @relation(fields: [customerId], references: [id])
-
   @@map("customer_visits")
 }
 
@@ -348,4 +348,20 @@ model Page {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("pages")
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  userId    String?  @map("user_id")
+  status    String   @default("NEW")
+  source    String?  @default("website")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contact_submissions")
 }

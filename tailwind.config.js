@@ -9,17 +9,28 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: "#fff8f0",
-          100: "#fff0e0",
-          200: "#ffdcb3",
-          300: "#ffc380",
-          400: "#ffaa4d",
-          500: "#ff9119",
-          600: "#ff7700",
-          700: "#e66a00",
-          800: "#cc5e00",
-          900: "#a64c00",
-          950: "#803b00",
+          50: "#fef7ed",   // Light peach
+          100: "#fed7aa",  // Light orange
+          200: "#fdba74",  // Medium light orange
+          300: "#fb923c",  // Medium orange
+          400: "#f97316",  // Bright orange
+          500: "#ea580c",  // Deep orange
+          600: "#dc2626",  // Red orange
+          700: "#b91c1c",  // Dark red
+          800: "#7f1d1d",  // Very dark red
+          900: "#451a03",  // Dark brown
+        },
+        dark: {
+          50: "#fafaf9",
+          100: "#f5f5f4",
+          200: "#e7e5e4",
+          300: "#d6d3d1",
+          400: "#a8a29e",
+          500: "#78716c",
+          600: "#57534e",
+          700: "#44403c",  // Medium brown
+          800: "#292524",  // Dark brown (main background)
+          900: "#1c1917",  // Very dark brown
         },
         secondary: {
           50: "#f0f9ff",

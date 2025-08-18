@@ -47,33 +47,34 @@ export default async function ProductsPage() {
   ]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">All Products</h1>
+    <div className="min-h-screen bg-dark-800">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8 text-primary-100">All Products</h1>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar */}
-        <div className="md:w-1/4 lg:w-1/5">
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h2 className="text-lg font-semibold mb-4">Categories</h2>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/products" className="text-primary-600 font-semibold">
-                  All Products
-                </Link>
-              </li>
-              {categories.map((category) => (
-                <li key={category}>
-                  <Link
-                    href={`/category/${category.toLowerCase()}`}
-                    className="text-gray-600 hover:text-primary-600 transition-colors"
-                  >
-                    {category}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="md:w-1/4 lg:w-1/5">
+            <div className="bg-dark-700 p-4 rounded-lg shadow-md border border-primary-200/20">
+              <h2 className="text-lg font-semibold mb-4 text-primary-100">Categories</h2>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/products" className="text-primary-400 font-semibold">
+                    All Products
                   </Link>
                 </li>
-              ))}
-            </ul>
+                {categories.map((category) => (
+                  <li key={category}>
+                    <Link
+                      href={`/category/${category.toLowerCase()}`}
+                      className="text-primary-300 hover:text-primary-400 transition-colors"
+                    >
+                      {category}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
 
         {/* Products Grid */}
         <div className="md:w-3/4 lg:w-4/5">
@@ -85,17 +86,18 @@ export default async function ProductsPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <div className="text-gray-400 text-8xl mb-6">🛒</div>
-              <h2 className="text-2xl font-bold text-gray-600 mb-4">No Products Available</h2>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              <div className="text-primary-400 text-8xl mb-6">🛒</div>
+              <h2 className="text-2xl font-bold text-primary-200 mb-4">No Products Available</h2>
+              <p className="text-primary-300 mb-6 max-w-md mx-auto">
                 There are currently no products in our catalog. Please check back later or contact us for more information.
               </p>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-primary-400">
                 Admin: Add products in the admin panel to see them here.
               </div>
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

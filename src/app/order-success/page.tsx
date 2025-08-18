@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiCheckCircle, FiDownload, FiShare2, FiTruck, FiMail } from 'react-icons/fi';
 import OrderTracking from '@/components/OrderTracking';
+import { trackPurchase } from '@/components/Analytics';
 
 function OrderSuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -13,7 +14,7 @@ function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const orderNumber = searchParams.get('orderNumber') || searchParams.get('order') || 'ORD-' + Date.now();
+  const orderNumber = searchParams.get('orderNumber') || searchParams.get('order') || 'MF100001';
 
   useEffect(() => {
     // Fetch real order details from API
@@ -57,6 +58,21 @@ function OrderSuccessContent() {
           };
 
           setOrderDetails(transformedOrder);
+
+          // Track purchase event
+          trackPurchase({
+            transaction_id: transformedOrder.orderNumber,
+            value: transformedOrder.totalAmount,
+            currency: 'INR',
+            items: transformedOrder.items.map((item: any) => ({
+              item_id: item.id,
+              item_name: item.name,
+              category: 'Product',
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          });
+
         } else {
           console.log('❌ Order not found, using fallback data');
           // Fallback to basic order data if not found

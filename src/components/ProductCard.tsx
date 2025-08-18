@@ -84,7 +84,7 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
 
   return (
     <div
-      className="group relative bg-white rounded-lg overflow-hidden shadow-product transition-all duration-300 hover:-translate-y-1"
+      className="group relative bg-dark-700 rounded-lg overflow-hidden shadow-product transition-all duration-300 hover:-translate-y-1 border border-primary-200/20"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -142,10 +142,10 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
       {/* Product Info */}
       <div className="p-4">
         <div className="mb-1">
-          <span className="text-xs text-gray-500 uppercase">{product.category}</span>
+          <span className="text-xs text-primary-300 uppercase">{product.category}</span>
         </div>
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-medium text-gray-800 mb-1 group-hover:text-primary-600 transition-colors line-clamp-2">
+          <h3 className="font-medium text-primary-100 mb-1 group-hover:text-primary-400 transition-colors line-clamp-2">
             {product.name}
           </h3>
         </Link>
@@ -156,15 +156,15 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
           <FiStar className="fill-current" size={14} />
           <FiStar className="fill-current" size={14} />
           <FiStar className="fill-current" size={14} />
-          <FiStar className="text-gray-300" size={14} />
-          <span className="text-xs text-gray-500 ml-1">(24)</span>
+          <FiStar className="text-primary-400" size={14} />
+          <span className="text-xs text-primary-300 ml-1">(24)</span>
         </div>
 
         {/* Price */}
         <div className="flex justify-between items-center">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
-              <p className="font-bold text-gray-900">
+              <p className="font-bold text-primary-100">
                 ₹{(product.discountedPrice && product.hasDiscount ? product.discountedPrice : product.price).toFixed(2)}
               </p>
               {product.hasDiscount && product.discountedPrice && product.discountPercentage && (
@@ -174,13 +174,13 @@ export default function ProductCard({ product, isBestSeller = false }: ProductCa
               )}
             </div>
             {product.hasDiscount && product.discountedPrice && (
-              <p className="text-sm text-gray-500 line-through">₹{product.price.toFixed(2)}</p>
+              <p className="text-sm text-primary-300 line-through">₹{product.price.toFixed(2)}</p>
             )}
           </div>
 
           {/* Add to Cart Button - Visible on Mobile */}
           <button
-            className="md:hidden bg-primary-50 text-primary-600 p-2 rounded-full hover:bg-primary-100 transition-colors"
+            className="md:hidden bg-primary-500 text-white p-2 rounded-full hover:bg-primary-600 transition-colors"
             aria-label="Add to cart"
             onClick={handleAddToCart}
           >

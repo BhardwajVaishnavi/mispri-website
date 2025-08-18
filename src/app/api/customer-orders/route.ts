@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { generateOrderNumber } from '@/lib/utils/order-utils';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 
         if (!customer) {
           await prisma.$disconnect();
-          console.log('❌ Customer not found for userId:', userId);
+          console.log('ℹ️ Customer not found for userId:', userId, '- returning empty orders array');
           return NextResponse.json([]);
         }
 
@@ -216,6 +217,20 @@ export async function POST(request: NextRequest) {
             if (user.customer) {
               console.log('✅ Website API: User has customer profile:', user.customer.id);
               customer = user.customer;
+
+              // Update customer phone number if provided in shipping address
+              if (shippingAddress?.phone && customer.phone !== shippingAddress.phone) {
+                console.log('🔄 Website API: Updating customer phone number:', shippingAddress.phone);
+                customer = await prisma.customer.update({
+                  where: { id: customer.id },
+                  data: {
+                    phone: shippingAddress.phone,
+                    firstName: shippingAddress?.firstName || customer.firstName,
+                    lastName: shippingAddress?.lastName || customer.lastName,
+                  },
+                });
+                console.log('✅ Website API: Customer phone number updated');
+              }
             }
           } else {
             // Create new user
@@ -242,6 +257,20 @@ export async function POST(request: NextRequest) {
           if (user?.customer) {
             customer = user.customer;
             console.log('✅ Website API: Found customer by userId:', customer.id);
+
+            // Update customer phone number if provided in shipping address
+            if (shippingAddress?.phone && customer.phone !== shippingAddress.phone) {
+              console.log('🔄 Website API: Updating customer phone number:', shippingAddress.phone);
+              customer = await prisma.customer.update({
+                where: { id: customer.id },
+                data: {
+                  phone: shippingAddress.phone,
+                  firstName: shippingAddress?.firstName || customer.firstName,
+                  lastName: shippingAddress?.lastName || customer.lastName,
+                },
+              });
+              console.log('✅ Website API: Customer phone number updated');
+            }
           }
         }
 
@@ -281,6 +310,9 @@ export async function POST(request: NextRequest) {
               state: shippingAddress.state || '',
               postalCode: shippingAddress.pincode || shippingAddress.postalCode || '',
               country: shippingAddress.country || 'India',
+              firstName: shippingAddress.firstName || '',
+              lastName: shippingAddress.lastName || '',
+              phone: shippingAddress.phone || null,
               isDefault: false,
             },
           });
@@ -288,7 +320,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate order number
-        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+        const orderNumber = await generateOrderNumber();
 
         // Handle coupon usage if provided
         let couponUsageId = null;

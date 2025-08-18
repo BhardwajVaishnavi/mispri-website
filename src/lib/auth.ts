@@ -47,46 +47,29 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === 'google') {
+      console.log('🔍 Sign-in attempt:', {
+        provider: account?.provider,
+        email: user.email,
+        name: user.name
+      });
+
+      // Always allow sign-in - we'll handle user creation in JWT callback
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      console.log('🔐 JWT Callback:', {
+        hasUser: !!user,
+        hasToken: !!token,
+        provider: account?.provider,
+        userEmail: user?.email || token?.email
+      });
+
+      if (user && account?.provider === 'google') {
+        console.log('🔍 Processing Google user in JWT callback');
+
         try {
-          console.log('🔍 Google sign-in attempt:', {
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            googleId: account.providerAccountId
-          });
-
-          // Check if user exists in our database
-          const WEBSITE_BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3001';
-          console.log('🌐 Using website base URL:', WEBSITE_BASE_URL);
-
-          // Try to find existing user
-          console.log('🔍 Checking if user exists...');
-          const checkResponse = await fetch(`${WEBSITE_BASE_URL}/api/auth/check-user`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: user.email }),
-          });
-
-          console.log('📋 Check user response status:', checkResponse.status);
-
-          if (checkResponse.ok) {
-            const existingUser = await checkResponse.json();
-            console.log('📋 Check user response:', existingUser);
-
-            if (existingUser.exists) {
-              // User exists, update their info
-              console.log('✅ User exists, using existing account');
-              user.id = existingUser.user.id;
-              return true;
-            }
-          }
-
-          // User doesn't exist, create new account
-          console.log('🆕 Creating new Google user...');
-          const registerResponse = await fetch(`${WEBSITE_BASE_URL}/api/auth/google-register`, {
+          // Create or get user from database
+          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/google-register`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -99,45 +82,62 @@ export const authOptions: NextAuthOptions = {
             }),
           });
 
-          console.log('📋 Register response status:', registerResponse.status);
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('✅ User processed successfully:', userData.user?.id);
 
-          if (registerResponse.ok) {
-            const newUser = await registerResponse.json();
-            console.log('✅ User created successfully:', newUser);
-            user.id = newUser.user.id;
-            return true;
+            token.id = userData.user?.id || `google-${Date.now()}`;
+            token.email = user.email;
+            token.name = user.name;
+            token.role = 'CUSTOMER';
+            token.image = user.image;
           } else {
-            const errorData = await registerResponse.text();
-            console.error('❌ Failed to create Google user:', {
-              status: registerResponse.status,
-              statusText: registerResponse.statusText,
-              error: errorData
-            });
-            return false;
+            console.log('⚠️ User creation failed, using temporary ID');
+            token.id = `google-${Date.now()}`;
+            token.email = user.email;
+            token.name = user.name;
+            token.role = 'CUSTOMER';
+            token.image = user.image;
           }
         } catch (error) {
-          console.error('❌ Google sign-in error:', error);
-          return false;
+          console.log('⚠️ Error processing user, using temporary ID:', error);
+          token.id = `google-${Date.now()}`;
+          token.email = user.email;
+          token.name = user.name;
+          token.role = 'CUSTOMER';
+          token.image = user.image;
         }
-      }
-      return true;
-    },
-    async jwt({ token, user, account }) {
-      if (user) {
+      } else if (user) {
+        // Regular credentials login
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.role = 'CUSTOMER';
       }
+
       return token;
     },
     async session({ session, token }) {
+      console.log('🔐 Session Callback:', {
+        hasSession: !!session,
+        hasToken: !!token,
+        tokenId: token?.id,
+        sessionEmail: session?.user?.email
+      });
+
       if (token) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.role = token.role as string || 'CUSTOMER';
+        session.user.image = token.image as string;
       }
       return session;
     },
   },
   pages: {
     signIn: '/',
-    error: '/',
+    error: '/auth/error',
   },
   session: {
     strategy: 'jwt',

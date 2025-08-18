@@ -6,9 +6,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  serverExternalPackages: ['@prisma/client', 'prisma'],
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+  },
   images: {
     unoptimized: true,
+    domains: ['images.unsplash.com'],
   },
   reactStrictMode: false,
   output: 'standalone',

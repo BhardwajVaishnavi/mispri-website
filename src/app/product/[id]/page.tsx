@@ -8,6 +8,7 @@ import ProductCard from '@/components/ProductCard';
 import ProductActions from '@/components/ProductActions';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import SizeSelector from '@/components/SizeSelector';
+import { trackViewItem } from '@/components/Analytics';
 
 interface ProductVariant {
   id: string;
@@ -255,6 +256,17 @@ export default function ProductPage() {
 
       setProduct(productData);
 
+      // Track product view
+      const defaultVariant = productData.variants?.find((v: ProductVariant) => v.isDefault) || productData.variants?.[0];
+      const productPrice = defaultVariant?.price || productData.price || 0;
+
+      trackViewItem({
+        item_id: productData.id,
+        item_name: productData.name,
+        category: productData.category || 'Unknown',
+        price: productPrice,
+      });
+
       // Set default variant if variants exist
       if (productData.variants && productData.variants.length > 0) {
         const defaultVariant = productData.variants.find((v: ProductVariant) => v.isDefault) || productData.variants[0];
@@ -423,18 +435,18 @@ export default function ProductPage() {
   const currentCategoryInfo = categoryInfo || getFallbackCategoryInfo(product.category);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-dark-800">
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-dark-700 border-b border-primary-200/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3">
           <nav className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm overflow-x-auto">
-            <Link href="/" className="text-gray-500 hover:text-primary-600 whitespace-nowrap">Home</Link>
-            <span className="text-gray-400">/</span>
-            <Link href={`/category/${product.category.toLowerCase()}`} className="text-gray-500 hover:text-primary-600 whitespace-nowrap">
+            <Link href="/" className="text-primary-300 hover:text-primary-400 whitespace-nowrap">Home</Link>
+            <span className="text-primary-400">/</span>
+            <Link href={`/category/${product.category.toLowerCase()}`} className="text-primary-300 hover:text-primary-400 whitespace-nowrap">
               {product.category}
             </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-900 font-medium truncate">{product.name}</span>
+            <span className="text-primary-400">/</span>
+            <span className="text-primary-100 font-medium truncate">{product.name}</span>
           </nav>
         </div>
       </div>
@@ -453,8 +465,8 @@ export default function ProductPage() {
           <div className="order-2 space-y-4 lg:space-y-6">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              {currentCategoryInfo.badges.map((badge, index) => (
-                <span key={index} className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
+              {currentCategoryInfo.badges.map((badge: string, index: number) => (
+                <span key={index} className="bg-primary-500/20 text-primary-300 text-xs font-semibold px-2 py-1 rounded-full">
                   {badge}
                 </span>
               ))}
@@ -462,7 +474,7 @@ export default function ProductPage() {
 
             {/* Header */}
             <div>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight">{product.name}</h1>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-100 mb-3 leading-tight">{product.name}</h1>
 
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center space-x-1">
@@ -473,16 +485,16 @@ export default function ProductPage() {
                       </svg>
                     ))}
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">4.9</span>
+                  <span className="text-sm font-semibold text-primary-100">4.9</span>
                 </div>
-                <span className="text-sm text-gray-600">124 Reviews</span>
+                <span className="text-sm text-primary-300">124 Reviews</span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-3 space-y-2 sm:space-y-0">
-                <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{displayPrice.toFixed(0)}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-primary-100">₹{displayPrice.toFixed(0)}</span>
                 {currentHasDiscount && originalPrice && currentDiscountPercentage && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg text-gray-500 line-through">₹{originalPrice.toFixed(0)}</span>
+                    <span className="text-lg text-primary-300 line-through">₹{originalPrice.toFixed(0)}</span>
                     <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
                       {currentDiscountPercentage}% OFF
                     </span>
@@ -493,7 +505,7 @@ export default function ProductPage() {
 
             {/* Description */}
             <div>
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              <p className="text-sm sm:text-base text-primary-200 leading-relaxed">
                 {product.description ||
                   (product.category === 'Cakes' ? `Delicious ${product.name} made with premium ingredients. Perfect for celebrations and special moments. Freshly baked to order with love and care.` :
                    product.category === 'Flowers' ? `Beautiful ${product.name} arrangement featuring fresh, vibrant blooms. Perfect for expressing your feelings and brightening any occasion.` :
@@ -508,7 +520,7 @@ export default function ProductPage() {
 
             {/* Weight/Size Selection */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">{currentCategoryInfo.weightLabel}</h3>
+              <h3 className="text-sm font-semibold text-primary-100 mb-3">{currentCategoryInfo.weightLabel}</h3>
               <SizeSelector
                 sizes={sizeOptions}
                 selectedSize={selectedVariant?.id}
@@ -523,13 +535,13 @@ export default function ProductPage() {
                   }
                 }}
               />
-              <p className="text-xs text-gray-500 mt-2">Serving Info</p>
+              <p className="text-xs text-primary-400 mt-2">Serving Info</p>
             </div>
 
             {/* Name on Product - Dynamic based on category */}
             {currentCategoryInfo.showNameField && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                <h3 className="text-sm font-semibold text-primary-100 mb-3">
                   {product.category.toLowerCase().includes('cake') ? 'Name on Cake' : `Name on ${product.category}`}
                 </h3>
                 <input
@@ -538,9 +550,9 @@ export default function ProductPage() {
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder={`Enter name for ${product.category.toLowerCase()} (optional)`}
                   maxLength={25}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F9EA0] focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-primary-200/30 bg-dark-600 text-primary-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent text-sm placeholder-primary-400"
                 />
-                <p className="text-xs text-gray-500 mt-1">{customName.length} / 25</p>
+                <p className="text-xs text-primary-400 mt-1">{customName.length} / 25</p>
               </div>
             )}
 
@@ -561,14 +573,14 @@ export default function ProductPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button className="flex items-center justify-center space-x-2 bg-white border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                <button className="flex items-center justify-center space-x-2 bg-dark-600 border border-primary-200/30 text-primary-200 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-dark-500 hover:text-primary-100 transition-colors text-sm">
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                   <span className="hidden sm:inline">Add to Wishlist</span>
                   <span className="sm:hidden">Wishlist</span>
                 </button>
-                <button className="flex items-center justify-center space-x-2 bg-white border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                <button className="flex items-center justify-center space-x-2 bg-dark-600 border border-primary-200/30 text-primary-200 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-dark-500 hover:text-primary-100 transition-colors text-sm">
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                   </svg>
@@ -581,27 +593,27 @@ export default function ProductPage() {
         </div>
 
         {/* Product Contains Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Contains</h2>
+        <div className="bg-dark-700 rounded-lg shadow-sm border border-primary-200/20 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-primary-100 mb-4">Product Contains</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentCategoryInfo.productContains.map((item, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                <span className="text-sm font-medium text-gray-700">{item.label}:</span>
-                <span className="text-sm text-gray-900">{item.value}</span>
+            {currentCategoryInfo.productContains.map((item: any, index: number) => (
+              <div key={index} className="flex justify-between items-center py-2 border-b border-primary-200/20 last:border-b-0">
+                <span className="text-sm font-medium text-primary-300">{item.label}:</span>
+                <span className="text-sm text-primary-100">{item.value}</span>
               </div>
             ))}
             {/* Add SKU from product data */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-sm font-medium text-gray-700">SKU:</span>
-              <span className="text-sm text-gray-900">{product.sku || 'N/A'}</span>
+            <div className="flex justify-between items-center py-2 border-b border-primary-200/20 last:border-b-0">
+              <span className="text-sm font-medium text-primary-300">SKU:</span>
+              <span className="text-sm text-primary-100">{product.sku || 'N/A'}</span>
             </div>
           </div>
         </div>
 
         {/* Description Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Description</h2>
-          <p className="text-gray-700 leading-relaxed">
+        <div className="bg-dark-700 rounded-lg shadow-sm border border-primary-200/20 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-primary-100 mb-4">Description</h2>
+          <p className="text-primary-200 leading-relaxed">
             {product.description ||
               (product.category === 'Cakes' ?
                 `This round cream cake is full of chocolate sponge and chocolate cream. It's perfect for every celebration like a birthday or anniversary, and everyone can enjoy it as it comes in an eggless only. This is one of the best selling cake and most loved product on our platform.` :
@@ -615,39 +627,39 @@ export default function ProductPage() {
         </div>
 
         {/* Care Instructions Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Care Instructions</h2>
+        <div className="bg-dark-700 rounded-lg shadow-sm border border-primary-200/20 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-primary-100 mb-4">Care Instructions</h2>
           <ul className="space-y-2">
-            {currentCategoryInfo.careInstructions.map((instruction, index) => (
+            {currentCategoryInfo.careInstructions.map((instruction: string, index: number) => (
               <li key={index} className="flex items-start space-x-2">
-                <span className="text-green-500 mt-1">•</span>
-                <span className="text-gray-700 text-sm">{instruction}</span>
+                <span className="text-primary-400 mt-1">•</span>
+                <span className="text-primary-200 text-sm">{instruction}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* SKU and Additional Info */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">SKU Number</h3>
-          <p className="text-gray-700 font-mono">{product.sku || 'N/A'}</p>
+        <div className="bg-dark-700 rounded-lg shadow-sm border border-primary-200/20 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-primary-100 mb-4">SKU Number</h3>
+          <p className="text-primary-200 font-mono">{product.sku || 'N/A'}</p>
 
           <div className="flex items-center space-x-4 mt-6">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-primary-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span className="text-sm text-gray-700">Fresh</span>
+              <span className="text-sm text-primary-200">Fresh</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-primary-500/20 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <span className="text-sm text-gray-700">Quality</span>
+              <span className="text-sm text-primary-200">Quality</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -659,9 +671,9 @@ export default function ProductPage() {
             </div>
           </div>
 
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              <span className="font-semibold">Note:</span> The icing, design of the cake may vary from the image depending upon local availability.
+          <div className="mt-4 p-4 bg-primary-900/20 rounded-lg border border-primary-200/20">
+            <p className="text-sm text-primary-300">
+              <span className="font-semibold text-primary-200">Note:</span> The icing, design of the cake may vary from the image depending upon local availability.
             </p>
           </div>
         </div>
@@ -670,8 +682,8 @@ export default function ProductPage() {
         {relatedProducts.length > 0 && (
           <div className="mb-8 lg:mb-16">
             <div className="text-center mb-6 lg:mb-12">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 lg:mb-4">You Might Also Like</h2>
-              <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
+              <h2 className="text-lg sm:text-xl font-semibold text-primary-100 mb-2 lg:mb-4">You Might Also Like</h2>
+              <p className="text-sm sm:text-base text-primary-300 max-w-2xl mx-auto">
                 Discover more delicious options from our {product.category.toLowerCase()} collection
               </p>
             </div>

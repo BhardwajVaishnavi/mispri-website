@@ -30,20 +30,29 @@ export default function ContactUsPage() {
     setSubmitError('');
 
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate a delay and success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate success
-      setSubmitSuccess(true);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
+
+      if (response.ok) {
+        setSubmitSuccess(true);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+        });
+      } else {
+        const error = await response.json();
+        setSubmitError(`Failed to send message: ${error.error || 'Please try again.'}`);
+      }
     } catch (error) {
+      console.error('Contact form error:', error);
       setSubmitError('An error occurred while submitting the form. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -249,7 +258,7 @@ export default function ContactUsPage() {
           <h2 className="text-xl font-semibold mb-6">Find Us</h2>
           <div className="aspect-video w-full rounded-lg overflow-hidden">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119743.40927234368!2d85.75041001320085!3d20.300828072222!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a1909d2d5170aa5%3A0xfc580e2b68b33fa8!2sBhubaneswar%2C%20Odisha!5e0!3m2!1sen!2sin!4v1623825289123!5m2!1sen!2sin"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119743.40927234368!2d85.75041001320085!3d20.300828072222!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a1909d2d5170aa5%3A0xfc580e2b68b33fa8!2sBhubaneswar%2C%20Odisha!5e0!3m2!1sen!2sin!4v1734567890123!5m2!1sen!2sin"
               width="100%"
               height="100%"
               style={{ border: 0 }}

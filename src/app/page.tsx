@@ -6,6 +6,7 @@ import ProductCard from '@/components/ProductCard';
 import CategoryCard from '@/components/CategoryCard';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import MobileCategorySection from '@/components/MobileCategorySection';
+import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 
 async function getCategories() {
   try {
@@ -116,7 +117,7 @@ export default async function Home() {
   ];
 
   return (
-    <div className="bg-white">
+    <div className="bg-dark-800">
       {/* Hero Banner Carousel */}
       <section className="relative px-2 sm:px-4 md:px-6 py-2 sm:py-4 max-w-7xl mx-auto">
         <SimpleCarousel banners={banners} />
@@ -129,8 +130,8 @@ export default async function Home() {
       <section className="sm:hidden py-6">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Bestselling Products</h2>
-            <Link href="/products" className="text-[#0D9488] text-sm">View All</Link>
+            <h2 className="text-xl font-bold text-primary-100">Bestselling Products</h2>
+            <Link href="/products" className="text-primary-400 text-sm">View All</Link>
           </div>
 
           {bestSellingProducts.length > 0 ? (
@@ -141,7 +142,7 @@ export default async function Home() {
                   : product.imageUrl;
 
                 return (
-                  <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+                  <div key={product.id} className="bg-dark-700 rounded-lg overflow-hidden shadow-sm border border-primary-200/20">
                     <Link href={`/product/${product.id}`}>
                       <div className="aspect-square">
                         {imageUrl ? (
@@ -157,8 +158,8 @@ export default async function Home() {
                         )}
                       </div>
                       <div className="p-2">
-                        <h3 className="font-medium text-gray-800 text-sm">{product.name}</h3>
-                        <p className="text-sm font-bold text-gray-800 mt-1">₹{product.price.toFixed(2)}</p>
+                        <h3 className="font-medium text-primary-100 text-sm">{product.name}</h3>
+                        <p className="text-sm font-bold text-primary-300 mt-1">₹{product.price.toFixed(2)}</p>
                       </div>
                     </Link>
                   </div>
@@ -167,15 +168,15 @@ export default async function Home() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="text-gray-400 text-4xl mb-2">📦</div>
-              <p className="text-gray-500 text-sm">No products available</p>
+              <div className="text-primary-400 text-4xl mb-2">📦</div>
+              <p className="text-primary-300 text-sm">No products available</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Features Bar */}
-      <section className="bg-white py-4 shadow-sm">
+      <section className="bg-dark-700 py-4 shadow-sm border-y border-primary-200/20">
         <div className="container mx-auto px-4">
           {/* Desktop Features */}
           <div className="hidden sm:flex flex-wrap justify-between">
@@ -184,35 +185,35 @@ export default async function Home() {
                 <FiClock className="text-primary-600 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Same Day Delivery</h3>
-                <p className="text-sm text-gray-600">Order before 4 PM</p>
+                <h3 className="font-medium text-primary-100">Same Day Delivery</h3>
+                <p className="text-sm text-primary-300">Order before 4 PM</p>
               </div>
             </div>
             <div className="flex items-center py-2 w-auto">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiGift className="text-primary-600 text-2xl" />
+                <FiGift className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Free Gift Message</h3>
-                <p className="text-sm text-gray-600">With every order</p>
+                <h3 className="font-medium text-primary-100">Free Gift Message</h3>
+                <p className="text-sm text-primary-300">With every order</p>
               </div>
             </div>
             <div className="flex items-center py-2 w-auto">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiHeart className="text-primary-600 text-2xl" />
+                <FiHeart className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">100% Love Guarantee</h3>
-                <p className="text-sm text-gray-600">Satisfaction guaranteed</p>
+                <h3 className="font-medium text-primary-100">100% Love Guarantee</h3>
+                <p className="text-sm text-primary-300">Satisfaction guaranteed</p>
               </div>
             </div>
             <div className="flex items-center py-2 w-auto">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiStar className="text-primary-600 text-2xl" />
+                <FiStar className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Premium Quality</h3>
-                <p className="text-sm text-gray-600">Handcrafted with care</p>
+                <h3 className="font-medium text-primary-100">Premium Quality</h3>
+                <p className="text-sm text-primary-300">Handcrafted with care</p>
               </div>
             </div>
           </div>
@@ -221,20 +222,20 @@ export default async function Home() {
           <div className="sm:hidden grid grid-cols-2 gap-4 mb-4">
             <div className="flex items-center py-2">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiClock className="text-primary-600 text-2xl" />
+                <FiClock className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Same Day Delivery</h3>
-                <p className="text-sm text-gray-600">Order before 4 PM</p>
+                <h3 className="font-medium text-primary-100">Same Day Delivery</h3>
+                <p className="text-sm text-primary-300">Order before 4 PM</p>
               </div>
             </div>
             <div className="flex items-center py-2">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiGift className="text-primary-600 text-2xl" />
+                <FiGift className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Free Gift Message</h3>
-                <p className="text-sm text-gray-600">With every order</p>
+                <h3 className="font-medium text-primary-100">Free Gift Message</h3>
+                <p className="text-sm text-primary-300">With every order</p>
               </div>
             </div>
           </div>
@@ -243,20 +244,20 @@ export default async function Home() {
           <div className="sm:hidden grid grid-cols-2 gap-4">
             <div className="flex items-center py-2">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiHeart className="text-primary-600 text-2xl" />
+                <FiHeart className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">100% Love Guarantee</h3>
-                <p className="text-sm text-gray-600">Satisfaction guaranteed</p>
+                <h3 className="font-medium text-primary-100">100% Love Guarantee</h3>
+                <p className="text-sm text-primary-300">Satisfaction guaranteed</p>
               </div>
             </div>
             <div className="flex items-center py-2">
               <div className="w-10 h-10 flex items-center justify-center mr-3">
-                <FiStar className="text-primary-600 text-2xl" />
+                <FiStar className="text-primary-400 text-2xl" />
               </div>
               <div>
-                <h3 className="font-medium">Premium Quality</h3>
-                <p className="text-sm text-gray-600">Handcrafted with care</p>
+                <h3 className="font-medium text-primary-100">Premium Quality</h3>
+                <p className="text-sm text-primary-300">Handcrafted with care</p>
               </div>
             </div>
           </div>
@@ -267,8 +268,8 @@ export default async function Home() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">Shop by Occasion</h2>
-            <Link href="/occasions" className="text-primary-600 hover:text-primary-700 flex items-center">
+            <h2 className="text-2xl font-bold text-primary-100">Shop by Occasion</h2>
+            <Link href="/occasions" className="text-primary-400 hover:text-primary-300 flex items-center">
               View All <FiArrowRight className="ml-1" />
             </Link>
           </div>
@@ -297,11 +298,11 @@ export default async function Home() {
       </section>
 
       {/* Best Selling Products */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-dark-700">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">Best Selling Products</h2>
-            <Link href="/products" className="text-primary-600 hover:text-primary-700 flex items-center">
+            <h2 className="text-2xl font-bold text-primary-100">Best Selling Products</h2>
+            <Link href="/products" className="text-primary-400 hover:text-primary-300 flex items-center">
               View All <FiArrowRight className="ml-1" />
             </Link>
           </div>
@@ -317,9 +318,9 @@ export default async function Home() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📦</div>
-              <h3 className="text-xl font-medium text-gray-600 mb-2">No Products Available</h3>
-              <p className="text-gray-500">Add products in the admin panel to see them here.</p>
+              <div className="text-primary-400 text-6xl mb-4">📦</div>
+              <h3 className="text-xl font-medium text-primary-200 mb-2">No Products Available</h3>
+              <p className="text-primary-300">Add products in the admin panel to see them here.</p>
             </div>
           )}
         </div>
@@ -329,8 +330,8 @@ export default async function Home() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">Shop by Category</h2>
-            <Link href="/products" className="text-primary-600 hover:text-primary-700 flex items-center">
+            <h2 className="text-2xl font-bold text-primary-100">Shop by Category</h2>
+            <Link href="/products" className="text-primary-400 hover:text-primary-300 flex items-center">
               View All <FiArrowRight className="ml-1" />
             </Link>
           </div>
@@ -350,20 +351,20 @@ export default async function Home() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📂</div>
-              <h3 className="text-xl font-medium text-gray-600 mb-2">No Categories Available</h3>
-              <p className="text-gray-500">Add products in the admin panel to create categories.</p>
+              <div className="text-primary-400 text-6xl mb-4">📂</div>
+              <h3 className="text-xl font-medium text-primary-200 mb-2">No Categories Available</h3>
+              <p className="text-primary-300">Add products in the admin panel to create categories.</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-dark-700">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">Featured Products</h2>
-            <Link href="/products" className="text-primary-600 hover:text-primary-700 flex items-center">
+            <h2 className="text-2xl font-bold text-primary-100">Featured Products</h2>
+            <Link href="/products" className="text-primary-400 hover:text-primary-300 flex items-center">
               View All <FiArrowRight className="ml-1" />
             </Link>
           </div>
@@ -378,9 +379,9 @@ export default async function Home() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">⭐</div>
-              <h3 className="text-xl font-medium text-gray-600 mb-2">No Featured Products</h3>
-              <p className="text-gray-500">Mark products as featured in the admin panel to see them here.</p>
+              <div className="text-primary-400 text-6xl mb-4">⭐</div>
+              <h3 className="text-xl font-medium text-primary-200 mb-2">No Featured Products</h3>
+              <p className="text-primary-300">Mark products as featured in the admin panel to see them here.</p>
             </div>
           )}
         </div>
@@ -435,52 +436,25 @@ export default async function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center mb-8">What Our Customers Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-50 p-6 rounded-lg">
-                <div className="flex text-yellow-400 mb-4">
-                  <FiStar className="fill-current" />
-                  <FiStar className="fill-current" />
-                  <FiStar className="fill-current" />
-                  <FiStar className="fill-current" />
-                  <FiStar className="fill-current" />
-                </div>
-                <p className="text-gray-600 mb-4">
-                  "The flowers were absolutely beautiful and delivered on time. The recipient was thrilled with the arrangement. Will definitely order again!"
-                </p>
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
-                  <div>
-                    <h4 className="font-medium">Customer {i}</h4>
-                    <p className="text-sm text-gray-500">Bhubaneswar</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TestimonialsCarousel limit={8} />
 
       {/* Newsletter */}
-      <section className="py-16 bg-primary-50">
+      <section className="py-16 bg-dark-700">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold mb-2">Subscribe to Our Newsletter</h2>
-          <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+          <h2 className="text-2xl font-bold mb-2 text-primary-100">Subscribe to Our Newsletter</h2>
+          <p className="text-primary-300 mb-6 max-w-xl mx-auto">
             Stay updated with our latest products, offers, and gifting ideas.
           </p>
           <form className="max-w-md mx-auto flex">
             <input
               type="email"
               placeholder="Your email address"
-              className="flex-grow px-4 py-3 rounded-l-md border-y border-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="flex-grow px-4 py-3 rounded-l-md border-y border-l border-primary-200/30 bg-primary-50 text-dark-800 focus:outline-none focus:ring-2 focus:ring-primary-400"
               required
             />
             <button
               type="submit"
-              className="bg-primary-600 hover:bg-primary-700 text-white font-medium px-6 py-3 rounded-r-md transition-colors"
+              className="bg-primary-500 hover:bg-primary-600 text-white font-medium px-6 py-3 rounded-r-md transition-colors"
             >
               Subscribe
             </button>

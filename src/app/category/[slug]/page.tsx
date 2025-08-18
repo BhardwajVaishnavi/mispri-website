@@ -75,17 +75,18 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   const categoryDescription = categoryInfo?.description || `Browse our ${displayCategory.toLowerCase()} collection`;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{displayCategory}</h1>
-        <p className="text-gray-600 mb-2">{categoryDescription}</p>
-        <p className="text-sm text-gray-500">
-          {products.length > 0
-            ? `Showing ${products.length} product${products.length !== 1 ? 's' : ''}`
-            : 'No products found in this category'
-          }
-        </p>
-      </div>
+    <div className="min-h-screen bg-dark-800">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-primary-100">{displayCategory}</h1>
+          <p className="text-primary-300 mb-2">{categoryDescription}</p>
+          <p className="text-sm text-primary-400">
+            {products.length > 0
+              ? `Showing ${products.length} product${products.length !== 1 ? 's' : ''}`
+              : 'No products found in this category'
+            }
+          </p>
+        </div>
 
       {products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -98,7 +99,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           <div className="max-w-md mx-auto">
             <div className="mb-6">
               <svg
-                className="mx-auto h-16 w-16 text-gray-400"
+                className="mx-auto h-16 w-16 text-primary-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -111,10 +112,10 @@ export default async function CategoryPage({ params }: { params: { slug: string 
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-primary-200 mb-2">
               No products found
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-primary-300 mb-6">
               We don't have any products in the "{displayCategory}" category yet.
               Check back soon or browse our other categories.
             </p>
@@ -128,7 +129,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
               <div>
                 <a
                   href="/"
-                  className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+                  className="text-primary-400 hover:text-primary-300 text-sm font-medium"
                 >
                   ← Back to Home
                 </a>
@@ -137,6 +138,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 import Link from 'next/link';
 
 export const metadata = {
@@ -133,41 +134,8 @@ export default function AboutPage() {
       </div>
 
       {/* Testimonials */}
-      <div className="bg-primary-50 py-16 px-4 rounded-lg mb-16">
-        <h2 className="text-2xl font-semibold mb-8 text-center">What Our Customers Say</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              quote: "The cake was not only beautiful but absolutely delicious! Everyone at the party loved it.",
-              author: "Meera K.",
-              location: "Mumbai",
-            },
-            {
-              quote: "I ordered flowers for my anniversary and they were stunning. The delivery was prompt and the arrangement was perfect.",
-              author: "Arjun S.",
-              location: "Delhi",
-            },
-            {
-              quote: "The gift hamper I ordered for my mother's birthday exceeded my expectations. Will definitely order again!",
-              author: "Neha T.",
-              location: "Bangalore",
-            },
-          ].map((testimonial, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-primary-600 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-              </div>
-              <p className="text-gray-600 mb-4">{testimonial.quote}</p>
-              <div>
-                <p className="font-medium">{testimonial.author}</p>
-                <p className="text-gray-500 text-sm">{testimonial.location}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="mb-16">
+        <TestimonialsCarousel limit={6} />
       </div>
 
       {/* CTA */}

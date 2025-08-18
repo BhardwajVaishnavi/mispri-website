@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     // Create a simple test order
     const testOrderData = {
-      userId: 'test-user-id',
+      userId: 'new-test-user-' + Date.now(),
       items: [
         {
           productId: 'test-product-id',
@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       shippingAddress: {
         firstName: 'Test',
         lastName: 'User',
-        email: 'test@example.com',
-        phone: '+91 9876543210',
+        email: 'testphone' + Date.now() + '@example.com',
+        phone: '+91 8765432109',
         street: '123 Test Street',
         city: 'Bhubaneswar',
         state: 'Odisha',

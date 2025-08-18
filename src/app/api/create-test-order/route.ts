@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { generateOrderNumber } from '@/lib/utils/order-utils';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Generate order number
-      const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const orderNumber = await generateOrderNumber();
 
       // Create test order (admin panel schema)
       const order = await prisma.order.create({

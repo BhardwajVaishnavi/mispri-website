@@ -7,36 +7,64 @@ import { FiChevronDown, FiChevronUp, FiPhone, FiMail, FiMessageSquare } from 're
 // FAQ data
 const faqs = [
   {
-    question: 'How do I track my order?',
-    answer: 'You can track your order by visiting the "Track Order" page and entering your order number and email address. Alternatively, you can find tracking information in the order confirmation email we sent you.',
+    question: "How can I place an order?",
+    answer: "You can place an order through our website, www.MispriFoods.in & WhatsApp, or by calling us at 9938938780"
   },
   {
-    question: 'What is your delivery area?',
-    answer: 'We currently deliver only in Bhubaneswar. You can check if we deliver to your area by entering your pincode on the website.',
+    question: "What payment methods do you accept?",
+    answer: "We accept credit/debit cards, UPI, net banking, and cash on delivery (COD) for select locations."
   },
   {
-    question: 'How can I cancel my order?',
-    answer: 'You can cancel your order within 1 hour of placing it by contacting our customer service team. Please note that orders that have already been dispatched cannot be cancelled.',
+    question: "Can I modify or cancel my order after placing it?",
+    answer: "Orders can be modified or canceled within 10 hours of placing them. Custom cakes cannot be canceled once preparation begins."
   },
   {
-    question: 'Do you offer same-day delivery?',
-    answer: 'Yes, we offer same-day delivery for orders placed before 4 PM. Orders placed after 4 PM will be delivered the next day.',
+    question: "Do you offer home delivery?",
+    answer: "Yes, we provide home delivery in selected pin code areas. Delivery charges may apply."
   },
   {
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit and debit cards, UPI, net banking, and cash on delivery.',
+    question: "How long does it take to deliver an order?",
+    answer: "Standard orders are delivered within 4 hours/days. Custom cakes may take 1 days to prepare."
   },
   {
-    question: 'How can I return a product?',
-    answer: 'If you are not satisfied with your purchase, please contact our customer service team within 24 hours of delivery. Please note that perishable items like flowers and cakes cannot be returned.',
+    question: "Can I pick up my order from your store?",
+    answer: "Yes, you can choose the self-pickup option at checkout."
   },
   {
-    question: 'Can I customize my order?',
-    answer: 'Yes, we offer customization options for most of our products. You can add a personalized message, choose specific colors for flower arrangements, or request special decorations for cakes.',
+    question: "Do you make customized cakes?",
+    answer: "Yes! We specialize in custom cakes. You can share your design ideas via WhatsApp or email."
   },
   {
-    question: 'How do I redeem a coupon code?',
-    answer: 'You can enter your coupon code in the designated field during checkout. The discount will be automatically applied to your order if the coupon is valid.',
+    question: "Do you offer eggless or sugar-free cakes?",
+    answer: "Yes, all our cakes are eggless and sugar-free options are available. Please mention your preference while ordering."
+  },
+  {
+    question: "How should I store my cake after delivery?",
+    answer: "Place it in an airtight container and refrigerate it if it contains fillings like cream cheese or whipped cream that need to be kept cold."
+  },
+  {
+    question: "What if I receive a damaged or incorrect order?",
+    answer: "Please contact us within 30 min. with a photo of the issue, and we will replace or refund your order as per our policy."
+  },
+  {
+    question: "Do you offer refunds?",
+    answer: "Refunds are issued only for damaged, incorrect, or undelivered orders. (Refer to our Refund Policy for more details.)"
+  },
+  {
+    question: "Do you have any discounts or offers?",
+    answer: "Yes! We run special discounts and loyalty programs. Follow us on Instagram and our whatsapp community for updates."
+  },
+  {
+    question: "How can I stay updated about new products and promotions?",
+    answer: "Subscribe to our newsletter or follow us on Facebook, Instagram, and WhatsApp for the latest updates."
+  },
+  {
+    question: "How can I contact customer support?",
+    answer: "You can reach us at: Email: contactus@MispriFoods.in, Phone: 9938938780, Address: Mangalpur, Pipili, Puri, Odisha"
+  },
+  {
+    question: "What are your working hours?",
+    answer: "We are open from 9.30 am to 9.30 pm all days."
   },
 ];
 
@@ -52,25 +80,28 @@ export default function HelpPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Help & FAQs</h1>
+    <div className="min-h-screen bg-dark-800">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8 text-primary-100">Help & FAQs</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <div className="bg-dark-700 rounded-lg shadow-md p-6 border border-primary-200/20">
+              <h2 className="text-xl font-semibold mb-6 text-primary-100">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map((faq, index) => (
                 <div key={index} className="border-b pb-4">
                   <button
-                    className="flex justify-between items-center w-full text-left font-medium"
+                    className="flex justify-between items-center w-full text-left font-medium text-primary-100"
                     onClick={() => toggleFaq(index)}
                   >
                     {faq.question}
-                    {expandedFaqs.includes(index) ? <FiChevronUp /> : <FiChevronDown />}
+                    <span className="text-primary-400">
+                      {expandedFaqs.includes(index) ? <FiChevronUp /> : <FiChevronDown />}
+                    </span>
                   </button>
                   {expandedFaqs.includes(index) && (
-                    <p className="mt-2 text-gray-600">{faq.answer}</p>
+                    <p className="mt-2 text-primary-300">{faq.answer}</p>
                   )}
                 </div>
               ))}
@@ -79,23 +110,23 @@ export default function HelpPage() {
         </div>
 
         <div>
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
+          <div className="bg-dark-700 rounded-lg shadow-md p-6 mb-6 border border-primary-200/20">
+            <h2 className="text-xl font-semibold mb-4 text-primary-100">Contact Us</h2>
             <div className="space-y-4">
               <div className="flex items-start">
-                <FiPhone className="text-primary-600 mt-1 mr-3" />
+                <FiPhone className="text-primary-400 mt-1 mr-3" />
                 <div>
-                  <h3 className="font-medium">Phone</h3>
-                  <p className="text-gray-600">+91 9876543210</p>
-                  <p className="text-sm text-gray-500">Mon-Sat, 9 AM - 8 PM</p>
+                  <h3 className="font-medium text-primary-100">Phone</h3>
+                  <p className="text-primary-300">9938938780</p>
+                  <p className="text-sm text-primary-400">9.30 AM - 9.30 PM, All days</p>
                 </div>
               </div>
               <div className="flex items-start">
-                <FiMail className="text-primary-600 mt-1 mr-3" />
+                <FiMail className="text-primary-400 mt-1 mr-3" />
                 <div>
-                  <h3 className="font-medium">Email</h3>
-                  <p className="text-gray-600">support@mispri.com</p>
-                  <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
+                  <h3 className="font-medium text-primary-100">Email</h3>
+                  <p className="text-primary-300">contactus@mispri.in</p>
+                  <p className="text-sm text-primary-400">We'll respond within 24 hours</p>
                 </div>
               </div>
               <div className="flex items-start">
@@ -109,41 +140,8 @@ export default function HelpPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/track-order" className="text-primary-600 hover:text-primary-800">
-                  Track Your Order
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-primary-600 hover:text-primary-800">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-primary-600 hover:text-primary-800">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-primary-600 hover:text-primary-800">
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-primary-600 hover:text-primary-800">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/refund" className="text-primary-600 hover:text-primary-800">
-                  Refund Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
+
+        </div>
         </div>
       </div>
     </div>

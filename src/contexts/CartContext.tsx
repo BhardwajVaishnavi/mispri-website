@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { trackAddToCart } from '@/components/Analytics';
 
 export interface ProductVariant {
   id: string;
@@ -126,6 +127,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               customName: cartItem.customName || null,
             })) || [];
             setCartItems(cartItems);
+
+            // Track add to cart event
+            trackAddToCart({
+              item_id: item.id,
+              item_name: item.name,
+              category: 'Product', // You can enhance this with actual category
+              quantity: 1,
+              price: item.price,
+            });
+
             return;
           }
         }
@@ -151,7 +162,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return updatedItems;
       } else {
         // Item doesn't exist, add new item
-        return [...prevItems, { ...item, quantity: 1 }];
+        const newItems = [...prevItems, { ...item, quantity: 1 }];
+
+        // Track add to cart event for new items
+        trackAddToCart({
+          item_id: item.id,
+          item_name: item.name,
+          category: 'Product', // You can enhance this with actual category
+          quantity: 1,
+          price: item.price,
+        });
+
+        return newItems;
       }
     });
   };
